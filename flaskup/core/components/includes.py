@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from flaskup.typing import OptionalSet
 
 
-@dataclass(frozen=True)
+@dataclass()
 class ComponentIncludes:
     css_includes: OptionalSet = field(default_factory=set)
     js_includes: OptionalSet = field(default_factory=set)
