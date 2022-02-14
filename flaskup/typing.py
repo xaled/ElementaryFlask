@@ -1,5 +1,4 @@
 import typing as _typing
-from types import SimpleNamespace
 from typing import Optional, List, Dict, AnyStr, Set
 
 import flask.typing as _flask_typing
@@ -39,9 +38,9 @@ class HTMLTagOpenRenderable:
         raise NotImplementedError()
 
 
-class AppContext:
-    def context(self) -> SimpleNamespace:
-        raise NotImplementedError()
+# class AppContext:
+#     def context(self) -> SimpleNamespace:
+#         raise NotImplementedError()
 
 
 RouteReturnValue = _typing.Union[ResponseReturnValue, Renderable]

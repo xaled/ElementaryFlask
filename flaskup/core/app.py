@@ -10,7 +10,7 @@ from .._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from ..view.themes import ALLOWED_THEMES
 
 
-class FlaskUpApp(t.AppContext):
+class FlaskUp:
     def __init__(self, name, secret, static_folder='static', template_folder='templates',
                  default_includes=None, default_meta_tags=None, default_title=None, icons: t.List[FavIcon] = None,
                  **options):
@@ -24,6 +24,7 @@ class FlaskUpApp(t.AppContext):
         self.flask_app = _f.Flask(name, static_folder=static_folder,
                                   template_folder=template_folder)
         self.flask_app.config['SECRET_KEY'] = secret
+        self.flask_app.flaskup = self
         # app.session_interface = LogoutSessionInterface(app.session_interface)
         self._csrf = _CSRFProtect(self.flask_app)
         self._core_bp = _f.Blueprint('core', __name__, url_prefix='/core',
@@ -39,35 +40,34 @@ class FlaskUpApp(t.AppContext):
         self._route_mapping = dict()
         self._page_view_functions = dict()
 
-        # App context
-        self.ctx = SimpleNamespace()
+        # App Config
+        # self.flask_app.config = current_app.config['FLASKUP_']
+        # self.config =
+        self.config = SimpleNamespace()
         if icons:
-            self.ctx.icons = icons
+            self.config.icons = icons
 
-        self.ctx.default_includes = default_includes or ComponentIncludes()
+        self.config.default_includes = default_includes or ComponentIncludes()
 
         if default_meta_tags:
-            self.ctx.default_meta_tags = default_meta_tags
+            self.config.default_meta_tags = default_meta_tags
         else:
-            self.ctx.default_meta_tags = dict()
+            self.config.default_meta_tags = dict()
 
-        if 'viewport' not in self.ctx.default_meta_tags:
-            self.ctx.default_meta_tags['viewport'] = 'width=device-width, initial-scale=1'
+        if 'viewport' not in self.config.default_meta_tags:
+            self.config.default_meta_tags['viewport'] = 'width=device-width, initial-scale=1'
 
-        self.ctx.default_title = default_title if default_title is not None else name
+        self.config.default_title = default_title if default_title is not None else name
 
         # Bootstrap
         include_bootstrap = options.get('include_bootstrap', True)
         if include_bootstrap:
             bootstrap_theme = options.get('bootstrap_theme', 'vanilla')
             bootstrap_theme = bootstrap_theme if bootstrap_theme in ALLOWED_THEMES else 'vanilla'
-            self.ctx.default_includes.css_includes.add(
+            self.config.default_includes.css_includes.add(
                 f'/core/static/bootstrap/themes/{bootstrap_theme}/bootstrap.min.css')
-            self.ctx.default_includes.js_includes.add(
+            self.config.default_includes.js_includes.add(
                 '/core/static/bootstrap/bootstrap.bundle.min.js')
-
-    def context(self) -> SimpleNamespace:
-        return self.ctx
 
     def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
         # Registering Blueprints
