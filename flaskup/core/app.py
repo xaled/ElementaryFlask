@@ -4,8 +4,7 @@ import flask as _f
 from flask_wtf.csrf import CSRFProtect as _CSRFProtect
 
 import flaskup.typing as t
-from .components.favicon import FavIcon
-from .components.includes import ComponentIncludes
+from .components import ComponentIncludes, PageResponse, FavIcon, make_page_response
 from .._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from ..view.themes import ALLOWED_THEMES
 
@@ -100,25 +99,69 @@ class FlaskUp:
     #
     #     return decorator
 
-    def route_page(self, rule: str, endpoint: t.OptionalStr = None, **options):
-        def _view_function(cls):
-            def _wrap(*args, **kwargs):
-                p = cls(*args, **kwargs)
-                return p.render()
+    # def route_page(self, rule: str, endpoint: t.OptionalStr = None, **options):
+    #     def _view_function(cls):
+    #         def _wrap(*args, **kwargs):
+    #             p = cls(*args, **kwargs)
+    #             return p.render()
+    #
+    #         return _wrap
+    #
+    #     def decorator(cls):
+    #         _ep = endpoint if endpoint is not None else cls.__name__ + '.__init__'
+    #         # print(_ep)
+    #         old_cls, old_wrapper = self._page_view_functions.get(_ep, (None, None))
+    #         if old_cls is not None and old_cls != cls:
+    #             raise AssertionError(
+    #                 "View function mapping is overwriting an existing"
+    #                 f" endpoint function: {_ep}"
+    #             )
+    #         elif old_cls is None:
+    #             self._page_view_functions[_ep] = cls, _view_function(cls)
+    #
+    #         wrapper = self._page_view_functions[_ep][1]
+    #
+    #         # print(endpoint)
+    #         #
+    #         # if endpoint in self._route_mapping:
+    #         #     ff = self._route_mapping[endpoint]
+    #         # else:
+    #         #     ff = FlaskUpApp._wrap_route(f)
+    #         #     self._route_mapping[endpoint] = ff
+    #         # print(ff)
+    #         # self._app_bp.add_url_rule(rule, endpoint, FlaskUpApp._wrap_route(f), **options)
+    #         self.flask_app.add_url_rule(rule, _ep, wrapper, **options)
+    #         return cls
+    #
+    #     return decorator
+    #
+    def route_page(self, rule: str, endpoint: t.OptionalStr = None,
+                   page_layout='default',
+                   **options):
+        def _view_function(f: t.Callable[..., t.PageRouteReturnValue]):
+            def _wrap(*args, **kwargs) -> t.ResponseReturnValue:
+                # p = cls(*args, **kwargs)
+                # return p.render()
+                page_response = f(*args, **kwargs)
+                if not isinstance(page_response, PageResponse):
+                    page_response = make_page_response(page_response)
+                pl = page_response.page_layout if page_response.page_layout is not None else page_layout
+                return self.get_page_layout(pl).render_response(page_response)
 
             return _wrap
 
-        def decorator(cls):
-            _ep = endpoint if endpoint is not None else cls.__name__ + '.__init__'
+        def decorator(f):
+            # _ep = endpoint if endpoint is not None else cls.__name__ + '.__init__'
+            _ep = endpoint if endpoint is not None else f.__name__
             # print(_ep)
-            old_cls, old_wrapper = self._page_view_functions.get(_ep, (None, None))
-            if old_cls is not None and old_cls != cls:
+            old_f, old_wrapper = self._page_view_functions.get(_ep, (None, None))
+            if old_f is not None and old_f != f:
                 raise AssertionError(
                     "View function mapping is overwriting an existing"
                     f" endpoint function: {_ep}"
                 )
-            elif old_cls is None:
-                self._page_view_functions[_ep] = cls, _view_function(cls)
+            elif old_f is None:
+                self._page_view_functions[_ep] = f, _view_function(f)
 
             wrapper = self._page_view_functions[_ep][1]
 
@@ -132,9 +175,39 @@ class FlaskUp:
             # print(ff)
             # self._app_bp.add_url_rule(rule, endpoint, FlaskUpApp._wrap_route(f), **options)
             self.flask_app.add_url_rule(rule, _ep, wrapper, **options)
-            return cls
+            return f
+
+        # def decorator(cls):
+        #     _ep = endpoint if endpoint is not None else cls.__name__ + '.__init__'
+        #     # print(_ep)
+        #     old_cls, old_wrapper = self._page_view_functions.get(_ep, (None, None))
+        #     if old_cls is not None and old_cls != cls:
+        #         raise AssertionError(
+        #             "View function mapping is overwriting an existing"
+        #             f" endpoint function: {_ep}"
+        #         )
+        #     elif old_cls is None:
+        #         self._page_view_functions[_ep] = cls, _view_function(cls)
+        #
+        #     wrapper = self._page_view_functions[_ep][1]
+        #
+        #     # print(endpoint)
+        #     #
+        #     # if endpoint in self._route_mapping:
+        #     #     ff = self._route_mapping[endpoint]
+        #     # else:
+        #     #     ff = FlaskUpApp._wrap_route(f)
+        #     #     self._route_mapping[endpoint] = ff
+        #     # print(ff)
+        #     # self._app_bp.add_url_rule(rule, endpoint, FlaskUpApp._wrap_route(f), **options)
+        #     self.flask_app.add_url_rule(rule, _ep, wrapper, **options)
+        #     return cls
 
         return decorator
+
+    def get_page_layout(self, page_layout):
+        from flaskup.core.components.page_layout import DefaultPageLayout
+        return DefaultPageLayout('default')
 
     # @staticmethod
     # def _wrap_route(f: t.Callable[..., t.RouteReturnValue]):
