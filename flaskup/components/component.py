@@ -1,21 +1,29 @@
+from abc import ABC, abstractmethod
 from collections import Iterable
 from functools import reduce as _reduce
 from operator import add as _add
 
-from flaskup.typing import Renderable, List, Optional, RenderReturnValue
+from flaskup.typing import List, Optional, RenderReturnValue
 from .includes import ComponentIncludes
 
 REDUCE_INCLUDES_MAX_DEPTH = 5
 
 
+class Renderable(ABC):
+    @abstractmethod
+    def render(self, **options) -> RenderReturnValue:
+        raise NotImplementedError()
+
+
 class AbstractComponent(Renderable):
     def __init__(self, component_includes: ComponentIncludes = None):
-        from flaskup import current_flaskup_app
         # self.app =
-        self.app = current_flaskup_app
-        self.app_config = self.app.config
+        # self.app = current_flaskup_app
+        # self.app_config = self.app.config
         self.component_includes = component_includes or ComponentIncludes()
+        # TODO: bootstrap components (get version from current app, raise if not included)
 
+    @abstractmethod
     def render(self, **options) -> RenderReturnValue:
         raise NotImplementedError()
 
@@ -26,6 +34,7 @@ class AbstractContainer(AbstractComponent):
         super(AbstractContainer, self).__init__(component_includes=container_includes)
         self.children = children
 
+    @abstractmethod
     def render(self, **options) -> RenderReturnValue:
         raise NotImplementedError()
 

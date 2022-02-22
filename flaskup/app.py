@@ -2,16 +2,20 @@ from types import SimpleNamespace
 
 import flask as _f
 from flask_wtf.csrf import CSRFProtect as _CSRFProtect
+from jinja2 import Environment, FileSystemLoader
 
 import flaskup.typing as t
-from .components import ComponentIncludes, PageResponse, FavIcon, make_page_response
-from .._consts import STATIC_FOLDER, TEMPLATE_FOLDER
-from ..view.themes import ALLOWED_THEMES
+from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
+from .components import ComponentIncludes, PageResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
+    EmptyPageLayout
+from .components.bootstrap import DEFAULT_BOOTSTRAP_VERSION
+from .presets.themes import DefaultTheme
 
 
 class FlaskUp:
     def __init__(self, name, secret, static_folder='static', template_folder='templates',
                  default_includes=None, default_meta_tags=None, default_title=None, icons: t.List[FavIcon] = None,
+                 theme: t.Optional[t.Union[Theme, str]] = None, include_bootstrap=True,
                  **options):
         # from .auth import LogoutSessionInterface
 
@@ -20,15 +24,16 @@ class FlaskUp:
         # TEMPLATE_DIR = os.path.join(MODULE_DIR, 'template')
         # STATIC_DIR = os.path.join(MODULE_DIR, 'static')
         # app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
+        self.name = name
         self.flask_app = _f.Flask(name, static_folder=static_folder,
                                   template_folder=template_folder)
         self.flask_app.config['SECRET_KEY'] = secret
         self.flask_app.flaskup = self
         # app.session_interface = LogoutSessionInterface(app.session_interface)
         self._csrf = _CSRFProtect(self.flask_app)
-        self._core_bp = _f.Blueprint('core', __name__, url_prefix='/core',
-                                     static_folder=STATIC_FOLDER, template_folder=TEMPLATE_FOLDER)
-        self._api_bp = _f.Blueprint('api', __name__, url_prefix='/api')
+        self.core_bp = _f.Blueprint('core', __name__, url_prefix='/core',
+                                    static_folder=STATIC_FOLDER, template_folder=TEMPLATE_FOLDER)
+        self.api_bp = _f.Blueprint('api', __name__, url_prefix='/api')
         # self._app_bp = _f.Blueprint('app', __name__, url_prefix='/app',
         #                             static_folder=static_folder,
         #                             template_folder=template_folder)
@@ -58,21 +63,38 @@ class FlaskUp:
 
         self.config.default_title = default_title if default_title is not None else name
 
-        # Bootstrap
-        include_bootstrap = options.get('include_bootstrap', True)
-        if include_bootstrap:
-            bootstrap_theme = options.get('bootstrap_theme', 'vanilla')
-            bootstrap_theme = bootstrap_theme if bootstrap_theme in ALLOWED_THEMES else 'vanilla'
-            self.config.default_includes.css_includes.add(
-                f'/core/static/bootstrap/themes/{bootstrap_theme}/bootstrap.min.css')
-            self.config.default_includes.js_includes.add(
-                '/core/static/bootstrap/bootstrap.bundle.min.js')
+        # Theme
+        if theme and isinstance(theme, Theme):
+            self.theme = theme
+        elif theme == 'adminlte':
+            from flaskup.presets.themes import AdminLTETheme
+            self.theme = AdminLTETheme()
+        else:
+            # bootstrap_theme = options.get('bootstrap_theme', None)
+            bootstrap_version = options.get('bootstrap_version', DEFAULT_BOOTSTRAP_VERSION)
+            bootstrap_dependency = options.get('bootstrap_dependency', None)
+            theme_default_includes = options.get('theme_default_includes', None)
+            theme_layouts_mapping = options.get('theme_layouts_mapping', None)
+            self.theme = DefaultTheme(bootstrap_version=bootstrap_version, bootstrap_theme=theme,
+                                      layouts_mapping=theme_layouts_mapping, include_bootstrap=include_bootstrap,
+                                      bootstrap_dependency=bootstrap_dependency,
+                                      default_includes=theme_default_includes)
+
+        self.config.default_includes += self.theme.default_includes
+
+        # Default Layout Mapping
+        self.layout_mapping = LayoutMapping(
+            default=EmptyPageLayout()
+        )
+
+        # Core jinja2 environment
+        self.core_jinja_env = Environment(autoescape=True, loader=FileSystemLoader(TEMPLATE_FOLDER))
 
     def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
         # Registering Blueprints
-        self.flask_app.register_blueprint(self._core_bp)
+        self.flask_app.register_blueprint(self.core_bp)
         # self.flask_app.register_blueprint(self._app_bp)
-        self.flask_app.register_blueprint(self._api_bp)
+        self.flask_app.register_blueprint(self.api_bp)
 
         # TODO register error handlers
 
@@ -146,7 +168,7 @@ class FlaskUp:
                 if not isinstance(page_response, PageResponse):
                     page_response = make_page_response(page_response)
                 pl = page_response.page_layout if page_response.page_layout is not None else page_layout
-                return self.get_page_layout(pl).render_response(page_response)
+                return self.get_layout(pl).render_response(page_response)
 
             return _wrap
 
@@ -205,9 +227,13 @@ class FlaskUp:
 
         return decorator
 
-    def get_page_layout(self, page_layout):
-        from flaskup.core.components.page_layout import DefaultPageLayout
-        return DefaultPageLayout('default')
+    def get_layout(self, layout_name, ignore=None):
+        ignore = ignore or list()
+        if self.theme.layouts_mapping not in ignore:
+            return self.theme.layouts_mapping.get_layout(layout_name)
+        if self.layout_mapping not in ignore:
+            return self.layout_mapping.get_layout(layout_name)
+        return self.layout_mapping.layouts['default']
 
     # @staticmethod
     # def _wrap_route(f: t.Callable[..., t.RouteReturnValue]):
@@ -218,3 +244,6 @@ class FlaskUp:
     #         return ret
     #
     #     return _wrap
+
+    def render_core_template(self, template_name, *args, **kwargs):
+        return self.core_jinja_env.get_template(template_name).render(*args, **kwargs)

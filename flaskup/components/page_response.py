@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
 from types import SimpleNamespace
 
-from flaskup.typing import Optional, BlockInit, BlockDict, HeadersValue, PageResponseInit
+from flaskup.typing import Optional, BlocksInit, BlocksDict, HeadersValue, PageResponseInit
 from .component import ComponentIncludes, reduce_includes
 
 
 @dataclass()
 class PageResponse:
-    block_init: BlockInit
+    blocks_init: BlocksInit
     component_includes: ComponentIncludes = field(init=False)
     ns: SimpleNamespace = field(default_factory=SimpleNamespace)
     title: Optional[str] = None
@@ -20,25 +20,29 @@ class PageResponse:
     status_code_msg: Optional[str] = None
     status_code_error: bool = False
     page_layout: Optional[str] = None
-    blocks: BlockDict = field(init=False)
+    blocks: BlocksDict = field(init=False)
 
     def __post_init__(self):
-        if not isinstance(self.block_init, dict):
-            self.blocks = {'main': self.block_init}
+        if not isinstance(self.blocks_init, dict):
+            self.blocks = {'main': self.blocks_init}
         else:
-            self.blocks = self.block_init
+            self.blocks = self.blocks_init
         self.component_includes = reduce_includes(self.blocks.items())
         self.meta_tags = dict(description=self.description, keywords=self.keywords, author=self.author,
                               viewport=self.viewport)
 
 
 class PageErrorResponse(PageResponse):
-    def __init__(self, status_code, status_code_msg=None, page_layout=None, headers=None):
+    def __init__(self, status_code, status_code_msg=None, page_layout=None, headers=None, title=None):
         # TODO default status_code_msg for status_code
-        if page_layout is None:
-            page_layout = 'error'
-        super(PageErrorResponse, self).__init__(None, status_code=status_code, status_code_msg=status_code_msg,
-                                                page_layout=page_layout, title=status_code_msg,
+        # if page_layout is None:
+        #     page_layout = 'error'
+        displayed_error = str(status_code)
+        if status_code_msg:
+            displayed_error += ' ' + status_code_msg
+        super(PageErrorResponse, self).__init__(displayed_error, status_code=status_code,
+                                                status_code_msg=status_code_msg,
+                                                page_layout=page_layout, title=title,
                                                 headers=headers)
 
 

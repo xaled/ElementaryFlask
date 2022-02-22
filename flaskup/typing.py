@@ -14,25 +14,27 @@ Callable = _typing.Callable
 Any = _typing.Any
 Tuple = _typing.Tuple
 
-RenderReturnValue = str
+RenderReturnValue = Union["RenderResponse", Optional[str]]
 
-
-class Renderable:
-    def render(self, **options) -> RenderReturnValue:
-        raise NotImplementedError()
+# class Renderable:
+#     def render(self, **options) -> RenderReturnValue:
+#         raise NotImplementedError()
 
 
 StatusCode = _flask_typing.StatusCode
 HeadersValue = _flask_typing.HeadersValue
-Block = Union[RenderReturnValue, Renderable]
-BlockDict = dict[str, Block]
-BlockInit = Union[Block, BlockDict]
+Block = Union[RenderReturnValue, "Renderable"]
+BlocksDict = dict[str, Block]
+BlocksInit = Union[Block, BlocksDict]
 PageErrorResponseInit = Union[StatusCode, Tuple[StatusCode, str], Tuple[StatusCode, HeadersValue],
                               Tuple[StatusCode, str, HeadersValue]]
-PageResponseInit = Union[BlockInit, Tuple[BlockInit, StatusCode], Tuple[BlockInit, StatusCode, HeadersValue],
-                         Tuple[BlockInit, HeadersValue], PageErrorResponseInit]
+PageResponseInit = Union[BlocksInit, Tuple[BlocksInit, StatusCode], Tuple[BlocksInit, StatusCode, HeadersValue],
+                         Tuple[BlocksInit, HeadersValue], PageErrorResponseInit]
 
 PageRouteReturnValue = Union["PageResponse", PageResponseInit]
+ComponentIncludes = "ComponentIncludes"
+NavigationItem = Union["NavigationLink", "NavigationSeparator", "NavigationGroup"]
+NavigationData = List[NavigationItem]
 
 # class ChildrenRenderable:
 #     def render_children(self) -> str:

@@ -111,6 +111,8 @@ class ComponentIncludes:
         #     else:
         #         union_dependencies[od.name] = od
         # return ComponentIncludes(list(union_dependencies.items()))
+        if other is None:
+            return self
 
         union_dependencies = merge_dependencies(self.dependencies + other.dependencies)
 
@@ -125,6 +127,63 @@ class ComponentIncludes:
     def _render_position(self, position):
         return ''.join(link.render_dependency_link() for dep in self.dependencies for link in dep.links
                        if link.include_position == position)
+
+
+class CSSDependencyLink(DependencyLink):
+    def __init__(self,
+                 link: str,
+                 include_position: Optional[str] = None,
+                 cross_origin: Optional[str] = 'anonymous',
+                 integrity: Optional[str] = None,
+                 ):
+        super(CSSDependencyLink, self).__init__(link, 'css', include_position=include_position,
+                                                cross_origin=cross_origin, integrity=integrity)
+
+
+class JavascriptDependencyLink(DependencyLink):
+    def __init__(self,
+                 link: str,
+                 include_position: Optional[str] = None,
+                 cross_origin: Optional[str] = 'anonymous',
+                 integrity: Optional[str] = None,
+                 ):
+        super(JavascriptDependencyLink, self).__init__(link, 'javascript', include_position=include_position,
+                                                       cross_origin=cross_origin, integrity=integrity)
+
+
+class BootstrapDependency(Dependency):
+    def __init__(self,
+                 js_link: Union[DependencyLink, str],
+                 css_link: Union[DependencyLink, str],
+                 version: Union[tuple[int], str] = None,
+                 theme: Optional[str] = None,
+                 jquery_dependency: Union[str, Dependency] = None,
+                 other_links: Optional[List[DependencyLink]] = None,
+                 ):
+        # JQuery Dependency
+        dependencies = list()
+        if jquery_dependency:
+            if isinstance(jquery_dependency, Dependency):
+                dependencies.append(jquery_dependency)
+            else:
+                dependencies.append(Dependency('jquery', links=[JavascriptDependencyLink(
+                    'https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js')]))
+
+        # CSS & Javascript
+        links = list()
+        links.append(js_link if isinstance(js_link, DependencyLink) else JavascriptDependencyLink(js_link))
+        links.append(css_link if isinstance(css_link, DependencyLink) else CSSDependencyLink(js_link))
+        if other_links:
+            links.extend(other_links)
+
+        super(BootstrapDependency, self).__init__('bootstrap', version=version, theme=theme, dependencies=dependencies,
+                                                  links=links)
+    # [
+    #     DependencyLink(
+    #         'https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css',
+    #         include_type='css',
+    #         integrity='sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn'),
+    #     _bootstrap_js_links[BOOTSTRAP4]])
 
 
 class IncludeVersionIncompatibility(Exception):
