@@ -7,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 import flaskup.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import ComponentIncludes, PageResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
-    EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink
+    EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink, IClassIcon, AbstractIcon
 from .components.bootstrap import DEFAULT_BOOTSTRAP_VERSION
 from .presets.themes import DefaultTheme
 
@@ -168,6 +168,7 @@ class FlaskUp:
                    navigation=False,
                    navigation_title=None,
                    navigation_params=None,
+                   navigation_icon: t.Union[str, AbstractIcon] = None,
                    **options):
         def _view_function(f: t.Callable[..., t.PageRouteReturnValue]):
             def _wrap(*args, **kwargs) -> t.ResponseReturnValue:
@@ -189,8 +190,11 @@ class FlaskUp:
                 if not _nt:
                     _nt = _ep.replace('_', ' ').strip()
                     _nt = _nt[0].upper() + _nt[1:]
-
-                self.navigation_map.append(NavigationLink(title=_nt, endpoint=_ep, params=navigation_params))
+                _ni = navigation_icon
+                if _ni and isinstance(_ni, str):
+                    _ni = IClassIcon(_ni)
+                self.navigation_map.append(NavigationLink(title=_nt, endpoint=_ep, params=navigation_params,
+                                                          icon=_ni))
             # print(_ep)
             old_f, old_wrapper = self._page_view_functions.get(_ep, (None, None))
             if old_f is not None and old_f != f:

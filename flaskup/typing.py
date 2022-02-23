@@ -33,7 +33,8 @@ PageResponseInit = Union[BlocksInit, Tuple[BlocksInit, StatusCode], Tuple[Blocks
 
 PageRouteReturnValue = Union["PageResponse", PageResponseInit]
 ComponentIncludes = "ComponentIncludes"
-NavigationItem = Union["NavigationLink", "NavigationSeparator", "NavigationGroup"]
+# NavigationItem = Union["NavigationLink", "NavigationSeparator", "NavigationGroup"]
+NavigationItem = "NavigationItem"
 NavigationData = List[NavigationItem]
 
 # class ChildrenRenderable:

@@ -36,7 +36,7 @@ class BootstrapTopNavigation(AbstractNavigation):  # TODO Bootstrap
         ret += '</div></ul></div></nav>'
         return ret
 
-    def render_item(self, itm: "NavigationLink"):
+    def render_item(self, itm: NavigationLink):
         _active = ''  # TODO
         _link = html_escape(itm.get_link())
         _title = html_escape(itm.title)
