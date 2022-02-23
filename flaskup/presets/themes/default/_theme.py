@@ -1,7 +1,7 @@
 from flaskup.components.bootstrap import DEFAULT_BOOTSTRAP_VERSION, make_bootstrap_dependency
 from flaskup.components.page_layout import LayoutMapping, EmptyPageLayout
 from flaskup.components.theme import Theme
-from flaskup.presets.page_layouts import TopNavigationLayout
+from .layouts import TopNavigationLayout
 
 
 class DefaultTheme(Theme):

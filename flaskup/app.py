@@ -7,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 import flaskup.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import ComponentIncludes, PageResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
-    EmptyPageLayout
+    EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler
 from .components.bootstrap import DEFAULT_BOOTSTRAP_VERSION
 from .presets.themes import DefaultTheme
 
@@ -16,6 +16,8 @@ class FlaskUp:
     def __init__(self, name, secret, static_folder='static', template_folder='templates',
                  default_includes=None, default_meta_tags=None, default_title=None, icons: t.List[FavIcon] = None,
                  theme: t.Optional[t.Union[Theme, str]] = None, include_bootstrap=True,
+                 navigation_map: dict = None,
+                 navigation_handler: AbstractNavigationHandler = None,
                  **options):
         # from .auth import LogoutSessionInterface
 
@@ -89,6 +91,10 @@ class FlaskUp:
 
         # Core jinja2 environment
         self.core_jinja_env = Environment(autoescape=True, loader=FileSystemLoader(TEMPLATE_FOLDER))
+
+        # Navigation
+        self.navigation_map = navigation_map or []
+        self.navigation_handler = navigation_handler or StaticNavigationHandler(self.navigation_map)
 
     def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
         # Registering Blueprints
@@ -247,3 +253,11 @@ class FlaskUp:
 
     def render_core_template(self, template_name, *args, **kwargs):
         return self.core_jinja_env.get_template(template_name).render(*args, **kwargs)
+
+    def set_navigation_handler(self, navigation_handler: AbstractNavigationHandler):
+        self.navigation_handler = navigation_handler
+
+    def extend_navigation_map(self, *items, clear_old=False):
+        if clear_old:
+            self.navigation_map.clear()
+        self.navigation_map.extend(items)
