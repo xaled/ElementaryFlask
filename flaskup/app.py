@@ -7,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 import flaskup.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import ComponentIncludes, PageResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
-    EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler
+    EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink
 from .components.bootstrap import DEFAULT_BOOTSTRAP_VERSION
 from .presets.themes import DefaultTheme
 
@@ -165,6 +165,9 @@ class FlaskUp:
     #
     def route_page(self, rule: str, endpoint: t.OptionalStr = None,
                    page_layout='default',
+                   navigation=False,
+                   navigation_title=None,
+                   navigation_params=None,
                    **options):
         def _view_function(f: t.Callable[..., t.PageRouteReturnValue]):
             def _wrap(*args, **kwargs) -> t.ResponseReturnValue:
@@ -181,6 +184,13 @@ class FlaskUp:
         def decorator(f):
             # _ep = endpoint if endpoint is not None else cls.__name__ + '.__init__'
             _ep = endpoint if endpoint is not None else f.__name__
+            if navigation:
+                _nt = navigation_title
+                if not _nt:
+                    _nt = _ep.replace('_', ' ').strip()
+                    _nt = _nt[0].upper() + _nt[1:]
+
+                self.navigation_map.append(NavigationLink(title=_nt, endpoint=_ep, params=navigation_params))
             # print(_ep)
             old_f, old_wrapper = self._page_view_functions.get(_ep, (None, None))
             if old_f is not None and old_f != f:
@@ -261,3 +271,6 @@ class FlaskUp:
         if clear_old:
             self.navigation_map.clear()
         self.navigation_map.extend(items)
+
+    def url_for(self, endpoint: str, **values: t.Any) -> str:
+        return _f.url_for(endpoint, **values)

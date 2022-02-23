@@ -54,7 +54,9 @@ class NavigationLink:
             raise ValueError("link or endpoint should be set ")
 
     def get_link(self):
-        return self.link or _app.url_for(self.endpoint, **self.params)
+        if self.params:
+            return self.link or _app.url_for(self.endpoint, **self.params)
+        return self.link or _app.url_for(self.endpoint)
 
 
 @dataclass
