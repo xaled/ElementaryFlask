@@ -6,4 +6,5 @@ todo
    :maxdepth: 2
    :caption: Contents:
 
-   routes
+   routing
+   page_layout

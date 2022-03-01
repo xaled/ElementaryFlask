@@ -170,6 +170,24 @@ class FlaskUp:
                    navigation_params=None,
                    navigation_icon: t.Union[str, AbstractIcon] = None,
                    **options):
+        """Decorate a page view function to register it with the given URL
+        rule and options.
+
+        .. code-block:: python
+
+            @app.route_page("/")
+            def index():
+                return "Hello, World!"
+
+        :param rule: The URL rule string.
+        :param endpoint: Name for the route. Default value: the name of function.
+        :param page_layout: Name of :class:`PageLayout` that renders the response. Default value: ``'default'``.
+        :param navigation: Add the page to navigation. Default value: ``None``.
+        :param navigation_title: The page title used in navigation.
+        :param navigation_icon: The page icon used in navigation.
+        :param options: Extra options passed to the Flask object.
+        """
+
         def _view_function(f: t.Callable[..., t.PageRouteReturnValue]):
             def _wrap(*args, **kwargs) -> t.ResponseReturnValue:
                 # p = cls(*args, **kwargs)

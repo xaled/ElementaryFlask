@@ -17,7 +17,8 @@ class Renderable(ABC):
     @abstractmethod
     def render(self, **options) -> RenderReturnValue:
         """Return the rendered object as a string or :class:`RenderResponse` object.
-        Accepts arguments in form of name=value pairs.
+
+        :param options: namespace used in rendering the object. May be passed to the template engine.
         """
         raise NotImplementedError()
 
