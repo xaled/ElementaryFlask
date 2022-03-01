@@ -10,12 +10,25 @@ REDUCE_INCLUDES_MAX_DEPTH = 5
 
 
 class Renderable(ABC):
+    """
+    An Interface for renderable objects
+    """
+
     @abstractmethod
     def render(self, **options) -> RenderReturnValue:
+        """Return the rendered object as a string or :class:`RenderResponse` object.
+        Accepts arguments in form of name=value pairs.
+        """
         raise NotImplementedError()
 
 
 class AbstractComponent(Renderable):
+    """
+
+    :param component_includes: Optional, component dependencies
+    :type component_includes: ComponentIncludes
+    """
+
     def __init__(self, component_includes: ComponentIncludes = None):
         # self.app =
         # self.app = current_flaskup_app
