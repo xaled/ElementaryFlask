@@ -27,7 +27,7 @@ todo
    basic_usage/index
    licenses
    changelog
-   references/index
+   References <references/modules>
 
 
 Indices and tables
