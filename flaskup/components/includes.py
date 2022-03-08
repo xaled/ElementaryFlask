@@ -72,14 +72,16 @@ class Dependency:
         return self._flatten()
 
     def _flatten(self, processed=None):
-        processed = processed or list()
+        processed = processed if processed is not None else list()
         if self in processed:
             return processed
-        processed.append(self)
 
         for d in self.dependencies:
             if d not in processed:
                 d._flatten(processed=processed)
+
+        processed.append(self)
+
         return processed
 
 
