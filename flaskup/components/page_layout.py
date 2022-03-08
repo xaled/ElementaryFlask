@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 from flaskup.globals import current_flaskup_app as _app
 from flaskup.typing import List, Optional, RenderReturnValue, Block, ResponseReturnValue
-from .component import ComponentIncludes, reduce_includes, AbstractComponent
+from .component import ComponentIncludes, reduce_includes, Renderable
 from .page_response import PageResponse
 
 
@@ -75,7 +75,7 @@ class AbstractPageLayout:
         raise NotImplementedError()
 
     def render_block(self, block: Block, ns: SimpleNamespace) -> ResponseReturnValue:
-        if isinstance(block, AbstractComponent):
+        if isinstance(block, Renderable) or callable(getattr(block, "render", None)):
             return block.render(**ns.__dict__)
         if isinstance(block, str):
             return block

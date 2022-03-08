@@ -1,15 +1,18 @@
+import re
 from types import SimpleNamespace
 
 import flask as _f
 from flask_wtf.csrf import CSRFProtect as _CSRFProtect
-from jinja2 import Environment, FileSystemLoader
 
 import flaskup.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import ComponentIncludes, PageResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
     EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink, IClassIcon, AbstractIcon
 from .components.bootstrap import DEFAULT_BOOTSTRAP_VERSION
+from .form import toast
 from .presets.themes import DefaultTheme
+
+_form_name_validator = re.compile(r'^[a-z0-9_]+$', re.IGNORECASE)
 
 
 class FlaskUp:
@@ -36,9 +39,7 @@ class FlaskUp:
         self.core_bp = _f.Blueprint('core', __name__, url_prefix='/core',
                                     static_folder=STATIC_FOLDER, template_folder=TEMPLATE_FOLDER)
         self.api_bp = _f.Blueprint('api', __name__, url_prefix='/api')
-        # self._app_bp = _f.Blueprint('app', __name__, url_prefix='/app',
-        #                             static_folder=static_folder,
-        #                             template_folder=template_folder)
+        self.form_bp = _f.Blueprint('form', __name__, url_prefix='/form')
 
         # @self.flask_app.route('/')
         # def index():
@@ -84,85 +85,37 @@ class FlaskUp:
 
         self.config.default_includes += self.theme.default_includes
 
+        # Flaskup js
+        self.config.default_includes += ComponentIncludes(js_includes={'/core/static/js/flaskup.js'})
+
         # Default Layout Mapping
         self.layout_mapping = LayoutMapping(
             default=EmptyPageLayout()
         )
 
         # Core jinja2 environment
-        self.core_jinja_env = Environment(autoescape=True, loader=FileSystemLoader(TEMPLATE_FOLDER))
+        # self.core_jinja_env = Environment(autoescape=True, loader=FileSystemLoader(TEMPLATE_FOLDER))
+        from flaskup.utils.jinja2 import Jinja2Env
+        self.core_jinja_env = Jinja2Env(TEMPLATE_FOLDER)
 
         # Navigation
         self.navigation_map = navigation_map or []
         self.navigation_handler = navigation_handler or StaticNavigationHandler(self.navigation_map)
 
+        # Logger
+        self.logger = self.flask_app.logger
+
     def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
         # Registering Blueprints
         self.flask_app.register_blueprint(self.core_bp)
-        # self.flask_app.register_blueprint(self._app_bp)
         self.flask_app.register_blueprint(self.api_bp)
+        self.flask_app.register_blueprint(self.form_bp)
 
         # TODO register error handlers
 
         # Run flask app
         self.flask_app.run(host=host, port=port, debug=debug, load_dotenv=load_dotenv, **kwargs)
 
-    # def route(self, rule: str, **options: t.Any) -> t.Callable:
-    #     def decorator(f: t.Callable) -> t.Callable:
-    #         endpoint = options.pop("endpoint", None)
-    #         # if endpoint is None:
-    #         #     endpoint = f.__name__
-    #         #
-    #         # print(endpoint)
-    #         #
-    #         # if endpoint in self._route_mapping:
-    #         #     ff = self._route_mapping[endpoint]
-    #         # else:
-    #         #     ff = FlaskUpApp._wrap_route(f)
-    #         #     self._route_mapping[endpoint] = ff
-    #         # print(ff)
-    #         # self._app_bp.add_url_rule(rule, endpoint, FlaskUpApp._wrap_route(f), **options)
-    #         self.flask_app.add_url_rule(rule, endpoint, f, **options)
-    #         return f
-    #
-    #     return decorator
-
-    # def route_page(self, rule: str, endpoint: t.OptionalStr = None, **options):
-    #     def _view_function(cls):
-    #         def _wrap(*args, **kwargs):
-    #             p = cls(*args, **kwargs)
-    #             return p.render()
-    #
-    #         return _wrap
-    #
-    #     def decorator(cls):
-    #         _ep = endpoint if endpoint is not None else cls.__name__ + '.__init__'
-    #         # print(_ep)
-    #         old_cls, old_wrapper = self._page_view_functions.get(_ep, (None, None))
-    #         if old_cls is not None and old_cls != cls:
-    #             raise AssertionError(
-    #                 "View function mapping is overwriting an existing"
-    #                 f" endpoint function: {_ep}"
-    #             )
-    #         elif old_cls is None:
-    #             self._page_view_functions[_ep] = cls, _view_function(cls)
-    #
-    #         wrapper = self._page_view_functions[_ep][1]
-    #
-    #         # print(endpoint)
-    #         #
-    #         # if endpoint in self._route_mapping:
-    #         #     ff = self._route_mapping[endpoint]
-    #         # else:
-    #         #     ff = FlaskUpApp._wrap_route(f)
-    #         #     self._route_mapping[endpoint] = ff
-    #         # print(ff)
-    #         # self._app_bp.add_url_rule(rule, endpoint, FlaskUpApp._wrap_route(f), **options)
-    #         self.flask_app.add_url_rule(rule, _ep, wrapper, **options)
-    #         return cls
-    #
-    #     return decorator
-    #
     def route_page(self, rule: str, endpoint: t.OptionalStr = None,
                    page_layout='default',
                    navigation=False,
@@ -225,43 +178,8 @@ class FlaskUp:
 
             wrapper = self._page_view_functions[_ep][1]
 
-            # print(endpoint)
-            #
-            # if endpoint in self._route_mapping:
-            #     ff = self._route_mapping[endpoint]
-            # else:
-            #     ff = FlaskUpApp._wrap_route(f)
-            #     self._route_mapping[endpoint] = ff
-            # print(ff)
-            # self._app_bp.add_url_rule(rule, endpoint, FlaskUpApp._wrap_route(f), **options)
             self.flask_app.add_url_rule(rule, _ep, wrapper, **options)
             return f
-
-        # def decorator(cls):
-        #     _ep = endpoint if endpoint is not None else cls.__name__ + '.__init__'
-        #     # print(_ep)
-        #     old_cls, old_wrapper = self._page_view_functions.get(_ep, (None, None))
-        #     if old_cls is not None and old_cls != cls:
-        #         raise AssertionError(
-        #             "View function mapping is overwriting an existing"
-        #             f" endpoint function: {_ep}"
-        #         )
-        #     elif old_cls is None:
-        #         self._page_view_functions[_ep] = cls, _view_function(cls)
-        #
-        #     wrapper = self._page_view_functions[_ep][1]
-        #
-        #     # print(endpoint)
-        #     #
-        #     # if endpoint in self._route_mapping:
-        #     #     ff = self._route_mapping[endpoint]
-        #     # else:
-        #     #     ff = FlaskUpApp._wrap_route(f)
-        #     #     self._route_mapping[endpoint] = ff
-        #     # print(ff)
-        #     # self._app_bp.add_url_rule(rule, endpoint, FlaskUpApp._wrap_route(f), **options)
-        #     self.flask_app.add_url_rule(rule, _ep, wrapper, **options)
-        #     return cls
 
         return decorator
 
@@ -273,18 +191,9 @@ class FlaskUp:
             return self.layout_mapping.get_layout(layout_name)
         return self.layout_mapping.layouts['default']
 
-    # @staticmethod
-    # def _wrap_route(f: t.Callable[..., t.RouteReturnValue]):
-    #     def _wrap(*args, **kwargs) -> t.ResponseReturnValue:
-    #         ret = f(*args, **kwargs)
-    #         if isinstance(ret, t.Renderable):
-    #             return ret.render()
-    #         return ret
-    #
-    #     return _wrap
-
-    def render_core_template(self, template_name, *args, **kwargs):
-        return self.core_jinja_env.get_template(template_name).render(*args, **kwargs)
+    def render_core_template(self, template_name, **kwargs):
+        # return self.core_jinja_env.get_template(template_name).render(*args, **kwargs)
+        return self.core_jinja_env.render_template(template_name, **kwargs)
 
     def set_navigation_handler(self, navigation_handler: AbstractNavigationHandler):
         self.navigation_handler = navigation_handler
@@ -296,3 +205,97 @@ class FlaskUp:
 
     def url_for(self, endpoint: str, **values: t.Any) -> str:
         return _f.url_for(endpoint, **values)
+
+    # def form(self,
+    #             name: t.Optional[str] = None,
+    #             **attrs: t.Any,
+    #             ):
+    #     """Creates a new :class:`Form` and uses the decorated function as
+    #     callback.
+    #
+    #     :param name: the name of the form. Default: function name.
+    #     """
+    #
+    #     def _form_func(f):
+    #         def _wrap(*args, **kwargs): # TODO typing form response
+    #             form_response = f(*args, **kwargs)
+    #             # TODO: process & convert
+    #             return _f.jsonify(form_response)
+    #
+    #         return _wrap
+    #
+    #     def decorator(f) -> Form:
+    #         n = name or f.__name__
+    #         frm = Form.make_form(f, n, attrs)
+    #
+    #         # TODO: register form endpoint
+    #
+    #         self._register_endpoint_function(self.form_bp, rule, frm, n, _form_func, options)
+    #         return frm
+    #
+    #     return decorator
+
+    def form(self,
+             name: t.Optional[str] = None,
+             **options: t.Any,
+             ):
+        """Creates a new :class:`Form` and uses the decorated function as
+        callback.
+
+        :param name: the name of the form. Default: class name.
+        :param options: extra options passed to flask add_url_rule.
+        """
+
+        def _form_func(frm_cls):
+            def _wrap():  # TODO typing form response
+                _frm = frm_cls()
+                if _frm.validate_on_submit():
+                    self.logger.debug('Form %s submit data: %s', _frm.flaskup_form_id, _frm.data)
+                    form_response = _frm.on_submit()
+                    # TODO: process & convert
+                    return _f.jsonify(form_response)
+                return toast('validation error')
+
+            return _wrap
+
+        def decorator(cls):
+            n = name or cls.__name__
+            rule = n
+            if not _form_name_validator.match(rule):
+                raise ValueError('Forbidden value for rule: ' + rule)
+
+            # make class renderable
+            # new_cls = type(cls.__name__, (cls, Renderable), {
+            #     'render': _form_render,
+            #     'flaskup_form_id': 'form.' + n
+            # })
+            setattr(cls, 'render', _form_render)
+            setattr(cls, 'flaskup_form_id', 'form.' + n)
+            # cls.__mro__ = cls.__mro__ + (Renderable, )
+
+            # register form endpoint
+            options['methods'] = ['POST']
+            self._register_endpoint_function(self.form_bp, rule, cls, n, _form_func, options)
+            return cls
+
+        return decorator
+
+    def _register_endpoint_function(self, bp, rule, func, endpoint, func_wrapper, add_url_options):
+
+        old_f, old_wrapper = self._page_view_functions.get(endpoint, (None, None))
+        if old_f is not None and old_f != func:
+            raise AssertionError(
+                "Endpoint function mapping is overwriting an existing"
+                f" endpoint function: {endpoint}"
+            )
+        elif old_f is None:
+            self._page_view_functions[endpoint] = func, func_wrapper(func)
+
+        wrapper = self._page_view_functions[endpoint][1]
+
+        bp.add_url_rule(rule, endpoint, wrapper, **add_url_options)
+
+
+def _form_render(self, **options) -> t.RenderReturnValue:
+    from flaskup.form.render import render_default
+    return render_default(self)
