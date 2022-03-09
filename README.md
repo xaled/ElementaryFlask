@@ -1,2 +1,2 @@
 # flaskly
-Component based UI framework for Flask/Python
+Component based framework for Flask/Python
