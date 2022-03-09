@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Flaskup'
+project = 'Flaskly'
 copyright = '2022, Khalid Grandi'
 author = 'Khalid Grandi'
 
@@ -36,7 +36,7 @@ extensions = [
     'myst_parser'
 ]
 
-# apidoc_module_dir = '../flaskup'
+# apidoc_module_dir = '../flaskly'
 # apidoc_output_dir = 'reference'
 # apidoc_excluded_paths = ['tests']
 # apidoc_separate_modules = True
