@@ -4,7 +4,7 @@ from functools import reduce as _reduce
 from operator import add as _add
 
 from flaskly.includes import ComponentIncludes
-from flaskly.typing import List, Optional, RenderReturnValue
+from flaskly.typing import Optional, RenderReturnValue, ContainerChildren
 
 REDUCE_INCLUDES_MAX_DEPTH = 5
 
@@ -43,8 +43,13 @@ class AbstractComponent(Renderable):
 
 
 class AbstractContainer(AbstractComponent):
-    def __init__(self, children: List[AbstractComponent]):
-        container_includes = _reduce(_add, (c.component_includes for c in children))
+    def __init__(self, children: ContainerChildren):
+        if not isinstance(children, list):
+            children = [children]
+        components = [c.component_includes for c in children if isinstance(c, AbstractComponent)]
+        container_includes = None
+        if components:
+            container_includes = _reduce(_add, components)
         super(AbstractContainer, self).__init__(component_includes=container_includes)
         self.children = children
 
@@ -54,6 +59,16 @@ class AbstractContainer(AbstractComponent):
 
     def render_children(self) -> RenderReturnValue:
         return ''.join(c.render() for c in self.children)
+
+
+class NormalContainer(AbstractContainer):
+    def __init__(self, children: ContainerChildren, prefix='', suffix=''):
+        super(NormalContainer, self).__init__(children)
+        self.prefix = prefix
+        self.suffix = suffix
+
+    def render(self, **options) -> RenderReturnValue:
+        return self.prefix + self.render_children() + self.suffix
 
 
 def reduce_includes(*includes_or_components) -> ComponentIncludes:

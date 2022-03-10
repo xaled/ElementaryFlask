@@ -37,29 +37,4 @@ ComponentIncludes = "ComponentIncludes"
 NavigationItem = "NavigationItem"
 NavigationData = List[NavigationItem]
 
-# class ChildrenRenderable:
-#     def render_children(self) -> str:
-#         raise NotImplementedError()
-#
-#
-# class HeadTagRenderable:
-#     def render_head_tag(self) -> str:
-#         raise NotImplementedError()
-#
-#
-# class BodyTagRenderable:
-#     def render_body_tag(self) -> str:
-#         raise NotImplementedError()
-#
-#
-# class HTMLTagOpenRenderable:
-#     def render_html_tag_open(self) -> str:
-#         raise NotImplementedError()
-
-
-# class AppContext:
-#     def context(self) -> SimpleNamespace:
-#         raise NotImplementedError()
-
-
-# RouteReturnValue = _typing.Union[ResponseReturnValue, Renderable]
+ContainerChildren = Union["Renderable", List["Renderable"]]

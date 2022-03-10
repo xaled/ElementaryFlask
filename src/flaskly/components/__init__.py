@@ -1,5 +1,5 @@
 # from .page import ComponentIncludes, AbstractComponent, Page, AbstractContainer, PageResponse
-from .component import AbstractContainer, AbstractComponent, Renderable
+from .component import AbstractContainer, AbstractComponent, Renderable, NormalContainer
 from .favicon import FavIcon
 from .icon import AbstractIcon, HTMLIcon, IClassIcon
 from .navigation import AbstractNavigation, NavigationItem, NavigationGroup, NavigationLink, NavigationSeparator, \
