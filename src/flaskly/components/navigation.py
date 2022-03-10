@@ -29,7 +29,7 @@ class AbstractNavigation(AbstractComponent):
 
 class DefaultNavigationHandler(AbstractNavigationHandler):
     def generate_navmap(self) -> NavigationData:
-        return _app.navigation_handler.generate_navmap()
+        return _app.config.navigation_handler.generate_navmap()
 
 
 class StaticNavigationHandler(AbstractNavigationHandler):

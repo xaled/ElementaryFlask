@@ -23,6 +23,7 @@ class FlasklyApp:
                  navigation_handler: AbstractNavigationHandler = None,
                  include_alpinejs=True,
                  alpinejs_dependency=None,
+                 logo_src=None,
                  **options):
         # from .auth import LogoutSessionInterface
 
@@ -50,14 +51,17 @@ class FlasklyApp:
         self._page_view_functions = dict()
 
         # App Config
-        # self.flask_app.config = current_app.config['FLASKLY_']
-        # self.config =
         self.config = SimpleNamespace()
-        if icons:
-            self.config.icons = icons
-        
+        self.flask_app.update_template_context(dict(flaskly_config=self.config))
+
+        # Default includes
         self.config.default_includes = default_includes or ComponentIncludes()
 
+        # Logo & Favicons
+        self.config.logo_src = logo_src or "/core/static/img/logo.png"
+        self.config.icons = icons or [FavIcon(href=self.config.logo_src, mimetype="image/png")]
+
+        # Metas
         if default_meta_tags:
             self.config.default_meta_tags = default_meta_tags
         else:
@@ -106,8 +110,8 @@ class FlasklyApp:
         self.core_jinja_env = Jinja2Env(TEMPLATE_FOLDER)
 
         # Navigation
-        self.navigation_map = navigation_map or []
-        self.navigation_handler = navigation_handler or StaticNavigationHandler(self.navigation_map)
+        self.config.navigation_map = navigation_map or []
+        self.config.navigation_handler = navigation_handler or StaticNavigationHandler(self.config.navigation_map)
 
         # Logger
         self.logger = self.flask_app.logger
@@ -171,7 +175,7 @@ class FlasklyApp:
                 _ni = navigation_icon
                 if _ni and isinstance(_ni, str):
                     _ni = IClassIcon(_ni)
-                self.navigation_map.append(NavigationLink(title=_nt, endpoint=_ep, params=navigation_params,
+                self.config.navigation_map.append(NavigationLink(title=_nt, endpoint=_ep, params=navigation_params,
                                                           icon=_ni))
             # print(_ep)
             old_f, old_wrapper = self._page_view_functions.get(_ep, (None, None))
@@ -203,12 +207,12 @@ class FlasklyApp:
         return self.core_jinja_env.render_template(template_name, **kwargs)
 
     def set_navigation_handler(self, navigation_handler: AbstractNavigationHandler):
-        self.navigation_handler = navigation_handler
+        self.config.navigation_handler = navigation_handler
 
     def extend_navigation_map(self, *items, clear_old=False):
         if clear_old:
-            self.navigation_map.clear()
-        self.navigation_map.extend(items)
+            self.config.navigation_map.clear()
+        self.config.navigation_map.extend(items)
 
     def url_for(self, endpoint: str, **values: t.Any) -> str:
         return _f.url_for(endpoint, **values)

@@ -27,7 +27,7 @@ class Jinja2Env:
         self.jinja2_env.globals.update(
             config=_app.flask_app.config,
             flaskly_config=_app.config,
-            navigation_handler=_app.navigation_handler,
+            # navigation_handler=_app.navigation_handler,
 
         )
         # TODO app filters

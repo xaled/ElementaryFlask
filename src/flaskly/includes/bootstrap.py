@@ -6,8 +6,8 @@ BOOTSTRAP4 = (4, 6, 1)
 DEFAULT_BOOTSTRAP_VERSION = BOOTSTRAP5
 INCLUDED_BOOTSTRAP_VERSION = (BOOTSTRAP4, BOOTSTRAP5)
 _bootstrap4_jquery_dependency = Dependency('jquery', version='3.5.1', links=[
-    JavascriptDependencyLink('https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js',
-                             integrity='sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj')
+    JavascriptDependencyLink('https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js')
+                             # integrity='sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj')
 ])
 _bootstrap_js_links = {
     BOOTSTRAP4: JavascriptDependencyLink(
