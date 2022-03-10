@@ -11,6 +11,7 @@ class DependencyLink:
     include_position: Optional[str] = None
     cross_origin: Optional[str] = 'anonymous'
     integrity: Optional[str] = None
+    defer: bool = False
 
     def __post_init__(self):
         if self.include_type not in ('css', 'javascript'):
@@ -32,7 +33,7 @@ class DependencyLink:
         if self.include_type == 'css':
             return f'<link href="{self.link}" rel="stylesheet" {params}>'
         else:
-            return f'<script src="{self.link}"  {params}></script>'
+            return f'<script {"defer" if self.defer else ""} src="{self.link}"  {params}></script>'
 
 
 @dataclass()
@@ -47,9 +48,9 @@ class Dependency:
 
     def __post_init__(self):
         if isinstance(self.version, str):
-            self.version = _parse_str_version(self.version)
+            self.version = parse_str_version(self.version)
 
-        _create_dependency_links(self.links, css_includes=self.css_includes, js_includes=self.js_includes)
+        create_dependency_links(self.links, css_includes=self.css_includes, js_includes=self.js_includes)
         self.css_includes, self.js_includes = None, None
 
     def __add__(self, other):
@@ -148,9 +149,10 @@ class JavascriptDependencyLink(DependencyLink):
                  include_position: Optional[str] = None,
                  cross_origin: Optional[str] = 'anonymous',
                  integrity: Optional[str] = None,
+                 defer=False,
                  ):
         super(JavascriptDependencyLink, self).__init__(link, 'javascript', include_position=include_position,
-                                                       cross_origin=cross_origin, integrity=integrity)
+                                                       cross_origin=cross_origin, integrity=integrity, defer=defer)
 
 
 class BootstrapDependency(Dependency):
@@ -211,14 +213,18 @@ def merge_dependencies(dependencies):
     return list(union_dependencies.values())
 
 
-def _parse_str_version(v: str):
+def parse_str_version(v: str):
     try:
         return tuple(int(t) for t in v.split('.'))
     except:
         return v
 
 
-def _create_dependency_links(links, css_includes=None, js_includes=None):
+def format_str_version(v):
+    return ".".join(str(vs) for vs in v)
+
+
+def create_dependency_links(links, css_includes=None, js_includes=None):
     if css_includes:
         for css_link in css_includes:
             links.append(DependencyLink(css_link, 'css'))

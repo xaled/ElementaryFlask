@@ -6,10 +6,10 @@ from flask_wtf.csrf import CSRFProtect as _CSRFProtect
 
 import flaskly.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
-from .components import ComponentIncludes, PageResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
+from .components import PageResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
     EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink, IClassIcon, AbstractIcon
-from .components.bootstrap import DEFAULT_BOOTSTRAP_VERSION
 from .form import toast
+from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
 
 _form_name_validator = re.compile(r'^[a-z0-9_]+$', re.IGNORECASE)
@@ -21,6 +21,8 @@ class FlasklyApp:
                  theme: t.Optional[t.Union[Theme, str]] = None, include_bootstrap=True,
                  navigation_map: dict = None,
                  navigation_handler: AbstractNavigationHandler = None,
+                 include_alpinejs=True,
+                 alpinejs_dependency=None,
                  **options):
         # from .auth import LogoutSessionInterface
 
@@ -53,7 +55,7 @@ class FlasklyApp:
         self.config = SimpleNamespace()
         if icons:
             self.config.icons = icons
-
+        
         self.config.default_includes = default_includes or ComponentIncludes()
 
         if default_meta_tags:
@@ -65,6 +67,11 @@ class FlasklyApp:
             self.config.default_meta_tags['viewport'] = 'width=device-width, initial-scale=1'
 
         self.config.default_title = default_title if default_title is not None else name
+        
+        # AlpineJS
+        if include_alpinejs or alpinejs_dependency:
+            alpinejs_dependency = alpinejs_dependency or DEFAULT_ALPINEJS_DEPENDENCY
+            self.config.default_includes.dependencies.insert(0, alpinejs_dependency)
 
         # Theme
         if theme and isinstance(theme, Theme):

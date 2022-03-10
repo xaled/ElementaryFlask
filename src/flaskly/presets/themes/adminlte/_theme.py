@@ -1,6 +1,6 @@
-from flaskly.components import Theme, LayoutMapping, ComponentIncludes, Dependency, \
-    CSSDependencyLink, JavascriptDependencyLink
-from flaskly.components.bootstrap import adminlte_dependency
+from flaskly.components import Theme, LayoutMapping
+from flaskly.includes import ComponentIncludes, Dependency, CSSDependencyLink, JavascriptDependencyLink
+from flaskly.includes import adminlte_dependency
 from .layouts import AdminLTEDefaultLayout
 
 

@@ -3,8 +3,8 @@ from collections import Iterable
 from functools import reduce as _reduce
 from operator import add as _add
 
+from flaskly.includes import ComponentIncludes
 from flaskly.typing import List, Optional, RenderReturnValue
-from .includes import ComponentIncludes
 
 REDUCE_INCLUDES_MAX_DEPTH = 5
 

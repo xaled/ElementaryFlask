@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
+from flaskly.includes import BootstrapDependency, ComponentIncludes
 from flaskly.typing import Optional
-from .includes import BootstrapDependency, ComponentIncludes
 from .page_layout import LayoutMapping
 
 

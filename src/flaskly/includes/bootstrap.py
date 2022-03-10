@@ -1,4 +1,4 @@
-from .includes import Dependency, _create_dependency_links, BootstrapDependency, \
+from ._includes import Dependency, create_dependency_links, BootstrapDependency, \
     JavascriptDependencyLink, CSSDependencyLink
 
 BOOTSTRAP5 = (5, 1, 3)
@@ -66,7 +66,7 @@ def make_bootstrap_dependency(version=None, theme=None,
         return adminlte_dependency
 
     _version = version or DEFAULT_BOOTSTRAP_VERSION
-    _create_dependency_links(links, css_includes=css_includes, js_includes=js_includes)
+    create_dependency_links(links, css_includes=css_includes, js_includes=js_includes)
 
     if _version not in INCLUDED_BOOTSTRAP_VERSION and not links:
         raise ValueError('No include links provided')
