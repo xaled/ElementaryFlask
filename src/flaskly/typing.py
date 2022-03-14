@@ -15,6 +15,7 @@ Any = _typing.Any
 Tuple = _typing.Tuple
 
 RenderReturnValue = Union["RenderResponse", Optional[str]]
+Renderable = "Renderable"
 
 # class Renderable:
 #     def render(self, **options) -> RenderReturnValue:
@@ -37,4 +38,7 @@ ComponentIncludes = "ComponentIncludes"
 NavigationItem = "NavigationItem"
 NavigationData = List[NavigationItem]
 
-ContainerChildren = Union["Renderable", List["Renderable"]]
+ContainerChildren = Union[Renderable, List[Renderable]]
+FormAction = "FormAction"
+FormActionInit = Union[FormAction, List[FormAction], "Form"]
+FormResponseReturn = Union["FormResponse", FormActionInit]

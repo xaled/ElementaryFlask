@@ -17,33 +17,40 @@ var Flaskly = {
 
     },
 
-    formResponse: function (data, frm = null, el = null) {
+    formResponse: function (formResponseData, frm = null, el = null) {
         // console.log(data);
+        for (formAction of formResponseData.actions) {
+            switch (formAction.action) {
+                case 'toast':
+                    Flaskly.toast(
+                        formAction.params.message,
+                        formAction.params.message_type,
+                        formAction.params.message_title,
+                        formAction.params.sticky,
+                        formAction.params.timeout,
+                    );
+                    break;
+                case 'redirect':
+                    Flaskly.redirect(formAction.params.destination);
+                    break;
+                case 'replace':
+                    if (frm == null) {
+                        console.error("Stateless element is not set!");
+                        throw "Stateless element is not set!";
+                    }
+                    Flaskly.replaceElement(frm, formAction.params.html);
+                    break;
+                case 'eval':
+                    eval(formAction.params.code);
+                    break;
+                case 'state':
+                    if (el == null) {
+                        console.error("Stateful element is not set!");
+                        throw "Stateful element is not set!";
+                    }
+                    Flaskly.updateState(el, formAction.params.new_state);
 
-        switch (data.action) {
-            case 'toast':
-                Flaskly.toast(data.msg);
-                break;
-            case 'redirect':
-                Flaskly.redirect(data.destination);
-                break;
-            case 'replace':
-                if (frm == null) {
-                    console.error("Stateless element is not set!");
-                    throw "Stateless element is not set!";
-                }
-                Flaskly.replaceElement(frm, data.html);
-                break;
-            case 'eval':
-                eval(data.code);
-                break;
-            case 'state':
-                if (el == null) {
-                    console.error("Stateful element is not set!");
-                    throw "Stateful element is not set!";
-                }
-                Flaskly.updateState(el, data.new_state);
-
+            }
         }
     },
 
@@ -64,7 +71,7 @@ var Flaskly = {
     },
 
     updateState: function (el, new_state) {
-        Flaskly.updateDict(el.formState, new_state);
+        Flaskly.updateDict(el, new_state);
     },
 
 

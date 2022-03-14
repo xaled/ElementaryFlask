@@ -1,7 +1,5 @@
-from flask import jsonify
-
 from flaskly.globals import current_flaskly_app as _app
-from .response import update_form
+from .response import FormResponse
 
 
 def form_endpoint_func(frm_cls):
@@ -11,9 +9,13 @@ def form_endpoint_func(frm_cls):
             form_response = _frm.on_submit()
         else:
             # return toast('validation error')
-            form_response = update_form(_frm)
+            form_response = _frm
+
+        if not isinstance(form_response, FormResponse):
+            form_response = FormResponse(form_response)
+
         _app.logger.debug('Form %s submit data: %s, response: %s',
                           _frm.flaskly_form_id, _frm.data, form_response)
-        return jsonify(form_response)
+        return form_response.to_dict()
 
     return _wrap
