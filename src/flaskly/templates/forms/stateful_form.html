@@ -1,5 +1,5 @@
 <form
-        x-data='FlasklyStatefulForm({{ form_state| safe }})'
+        x-data='Flaskly.statefulForm({{ form_state| safe }})'
         @submit.prevent="submitForm"
         method="POST"
         action="{{ url_for(form.flaskly_form_id) }}"

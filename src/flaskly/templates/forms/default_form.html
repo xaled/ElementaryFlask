@@ -1,4 +1,4 @@
-<form method="POST" action="{{ url_for(form.flaskly_form_id) }}" onsubmit="flasklySubmitForm(this); return false">
+<form method="POST" action="{{ url_for(form.flaskly_form_id) }}" onsubmit="Flaskly.submitForm(this); return false">
     {{ form.hidden_tag() }}
     {% for field in form %}
         {% if field.type not in ('CSRFTokenField', 'SubmitField','HiddenField') %}
