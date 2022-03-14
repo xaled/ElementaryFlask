@@ -18,7 +18,7 @@ var Flaskly = {
     },
 
     formResponse: function (data, frm = null, el = null) {
-        console.log(data);
+        // console.log(data);
 
         switch (data.action) {
             case 'toast':
@@ -72,11 +72,19 @@ var Flaskly = {
         for (const key in src) {
             // console.log('Type of ' + key + ' is: ' + typeof src[key] + '/' + typeof obj[key]);
             // console.log(src[key]);
-            if (key in obj && typeof src[key] == 'object' && typeof obj[key] == 'object')
+            if (key in obj && Array.isArray(src[key]) && Array.isArray(obj[key]))
+                Flaskly.updateArray(obj[key], src[key]);
+            else if (key in obj && typeof src[key] == 'object' && typeof obj[key] == 'object')
                 Flaskly.updateDict(obj[key], src[key]);
             else
                 obj[key] = src[key];
         }
+    },
+
+    updateArray: function (arr1, arr2) {
+        arr1.length = 0;
+        for (const key in arr2) arr1.push(arr2[key]);
+
     },
 
     statefulForm: function (formState) {
