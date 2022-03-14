@@ -8,7 +8,7 @@ import flaskly.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import PageResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
     EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink, IClassIcon, AbstractIcon
-from .form import toast
+from .form import FORM_RENDERING_TYPES, form_endpoint_func
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
 
@@ -71,7 +71,7 @@ class FlasklyApp:
             self.config.default_meta_tags['viewport'] = 'width=device-width, initial-scale=1'
 
         self.config.default_title = default_title if default_title is not None else name
-        
+
         # AlpineJS
         if include_alpinejs or alpinejs_dependency:
             alpinejs_dependency = alpinejs_dependency or DEFAULT_ALPINEJS_DEPENDENCY
@@ -176,7 +176,7 @@ class FlasklyApp:
                 if _ni and isinstance(_ni, str):
                     _ni = IClassIcon(_ni)
                 self.config.navigation_map.append(NavigationLink(title=_nt, endpoint=_ep, params=navigation_params,
-                                                          icon=_ni))
+                                                                 icon=_ni))
             # print(_ep)
             old_f, old_wrapper = self._page_view_functions.get(_ep, (None, None))
             if old_f is not None and old_f != f:
@@ -248,26 +248,19 @@ class FlasklyApp:
 
     def form(self,
              name: t.Optional[str] = None,
+             rendering_type: str = 'default',
              **options: t.Any,
              ):
         """Creates a new :class:`Form` and uses the decorated function as
         callback.
 
         :param name: the name of the form. Default: class name.
+        :param rendering_type: Form rendering types. Default: 'default'.
         :param options: extra options passed to flask add_url_rule.
         """
 
-        def _form_func(frm_cls):
-            def _wrap():  # TODO typing form response
-                _frm = frm_cls()
-                if _frm.validate_on_submit():
-                    self.logger.debug('Form %s submit data: %s', _frm.flaskly_form_id, _frm.data)
-                    form_response = _frm.on_submit()
-                    # TODO: process & convert
-                    return _f.jsonify(form_response)
-                return toast('validation error')
-
-            return _wrap
+        if rendering_type not in FORM_RENDERING_TYPES:
+            rendering_type = 'default'
 
         def decorator(cls):
             n = name or cls.__name__
@@ -281,12 +274,13 @@ class FlasklyApp:
             #     'flaskly_form_id': 'form.' + n
             # })
             setattr(cls, 'render', _form_render)
+            setattr(cls, 'form_rendering_type', rendering_type)
             setattr(cls, 'flaskly_form_id', 'form.' + n)
             # cls.__mro__ = cls.__mro__ + (Renderable, )
 
             # register form endpoint
             options['methods'] = ['POST']
-            self._register_endpoint_function(self.form_bp, rule, cls, n, _form_func, options)
+            self._register_endpoint_function(self.form_bp, rule, cls, n, form_endpoint_func, options)
             return cls
 
         return decorator
@@ -308,5 +302,4 @@ class FlasklyApp:
 
 
 def _form_render(self, **options) -> t.RenderReturnValue:
-    from flaskly.form.render import render_default
-    return render_default(self)
+    return FORM_RENDERING_TYPES[self.form_rendering_type](self)

@@ -1,0 +1,32 @@
+<form
+        x-data='FlasklyStatefulForm({{ form_state| safe }})'
+        @submit.prevent="submitForm"
+        method="POST"
+        action="{{ url_for(form.flaskly_form_id) }}"
+        id="{{ form.flaskly_form_id }}">
+    {{ form.hidden_tag() }}
+    {% for field in form %}
+        {% if field.type not in ('CSRFTokenField', 'SubmitField', 'HiddenField') %}
+            <div class="form-group">
+                <label for="field.id">{{ field.label.text }}</label>
+                {{ field(class="form-control is-invalid" if field.errors else "form-control", **{"x-model":"formState.data." + field.name}) }}
+                {#                {% if field.errors %}#}
+                {#                    <div class="invalid-feedback">#}
+                {#                        Please provide a valid city.#}
+                {#                    </div>#}
+                {#                {% endif %}#}
+            </div>
+        {% endif %}
+    {% endfor %}
+    {% for field in form %}
+        {% if field.type in ('SubmitField',) %}
+            {{ field(class="btn btn-primary") }}
+        {% endif %}
+    {% endfor %}
+    <ul>
+        <template x-for="err in formState.errors">
+            <li x-text="err"></li>
+        </template>
+    </ul>
+
+</form>
