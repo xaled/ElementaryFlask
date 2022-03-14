@@ -96,8 +96,11 @@ class FlasklyApp:
 
         self.config.default_includes += self.theme.default_includes
 
-        # Flaskly js
-        self.config.default_includes += ComponentIncludes(js_includes={'/core/static/js/flaskly.js'})
+        # Flaskly js & css
+        self.config.default_includes += ComponentIncludes(
+            js_includes={'/core/static/flaskly.js'},
+            css_includes={'/core/static/flaskly.css'},
+        )
 
         # Default Layout Mapping
         self.layout_mapping = LayoutMapping(

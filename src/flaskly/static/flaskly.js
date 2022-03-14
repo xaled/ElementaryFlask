@@ -94,7 +94,6 @@ var Flaskly = {
             formElement: null,
             // idSuffix: idSuffix,
             submitForm() {
-                this.formState.errors.push('test1');
 
                 // this.formMessage = "";
                 // this.formLoading = false;

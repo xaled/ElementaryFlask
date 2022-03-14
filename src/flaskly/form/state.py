@@ -8,9 +8,9 @@ def form_json_state(form):
 
 
 def form_state(form):
-    errors = []
-    for k in form.errors:
-        errors.extend(form.errors[k])
+    errors = dict()
+    for k in list(form.data.keys()) + [None]:
+        errors[k or ''] = '; '.join(form.errors.get(k, []))
 
     return dict(
         id=form.flaskly_form_id,
