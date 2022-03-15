@@ -55,3 +55,7 @@ def update_state(**new_state):
 
 def update_form(form):
     return update_state(formState=form_state(form))
+
+
+def error(error_msg):
+    return toast(error_msg, message_type='error', message_title='Error')

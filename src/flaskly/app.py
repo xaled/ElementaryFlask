@@ -154,7 +154,23 @@ class FlasklyApp:
         :param navigation_icon: The page icon used in navigation.
         :param options: Extra options passed to the Flask object.
         """
+        return self._route_page(rule, endpoint=endpoint,
+                                page_layout=page_layout,
+                                navigation=navigation,
+                                navigation_title=navigation_title,
+                                navigation_params=navigation_params,
+                                navigation_icon=navigation_icon,
+                                methods=None,
+                                **options)
 
+    def _route_page(self, rule: str, endpoint: t.OptionalStr = None,
+                    page_layout='default',
+                    navigation=False,
+                    navigation_title=None,
+                    navigation_params=None,
+                    navigation_icon: t.Union[str, AbstractIcon] = None,
+                    methods=None,
+                    **options):
         def _view_function(f: t.Callable[..., t.PageRouteReturnValue]):
             def _wrap(*args, **kwargs) -> t.ResponseReturnValue:
                 # p = cls(*args, **kwargs)
@@ -192,8 +208,20 @@ class FlasklyApp:
 
             wrapper = self._page_view_functions[_ep][1]
 
-            self.flask_app.add_url_rule(rule, _ep, wrapper, **options)
+            self.flask_app.add_url_rule(rule, _ep, wrapper, methods=methods, **options)
             return f
+
+        return decorator
+
+    def listing(self, rule: str, endpoint: t.OptionalStr = None, **options):
+
+        def decorator(cls):
+            # TODO: sanitize rule
+            for rule_suffix in ('',):  # '/<int:page>', '/<str:filter>', '/<str:filter>/<int:page>'):
+                self._route_page(rule + rule_suffix, endpoint or cls.__name__,
+                                 methods=['GET', 'POST'], **options)(cls.page_view)
+
+            return cls
 
         return decorator
 
