@@ -4,8 +4,8 @@ from flaskly.components.page_layout import EmptyPageLayout
 
 
 class AbstractSitePageLayout(EmptyPageLayout):
-    def __init__(self, layout_name, additional_includes=None, navigation=None):
-        super(AbstractSitePageLayout, self).__init__(layout_name, additional_includes=additional_includes,
+    def __init__(self, additional_includes=None, navigation=None):
+        super(AbstractSitePageLayout, self).__init__(additional_includes=additional_includes,
                                                      block_names=['main', 'aside'])
         self.navigation = navigation
 
@@ -24,7 +24,8 @@ class AbstractSitePageLayout(EmptyPageLayout):
         body += self.render_footer(ns)
 
         # Body includes
-        body += ns.component_includes.render_body_includes()
+        if ns.component_includes:
+            body += ns.component_includes.render_body_includes()
         body += '</body>'
         return body
 
@@ -49,6 +50,6 @@ class SitePageLayout(AbstractSitePageLayout):
     def render_footer(self, ns: SimpleNamespace) -> str:
         pass
 
-    def __init__(self, layout_name='default', additional_includes=None, navigation=None):
-        super(SitePageLayout, self).__init__(layout_name, additional_includes=additional_includes,
+    def __init__(self, additional_includes=None, navigation=None):
+        super(SitePageLayout, self).__init__(additional_includes=additional_includes,
                                              navigation=navigation)

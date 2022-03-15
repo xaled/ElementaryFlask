@@ -125,7 +125,8 @@ class EmptyPageLayout(AbstractPageLayout):
                 head += f'<meta name="{meta}" content="{html_escape(meta_value)}">'
 
         # Head includes
-        head += component_includes.render_head_includes()
+        if component_includes:
+            head += component_includes.render_head_includes()
 
         head += "</head>"
         return head

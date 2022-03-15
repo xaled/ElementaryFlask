@@ -25,16 +25,16 @@ class Renderable(ABC):
 
 class AbstractComponent(Renderable):
     """
-
-    :param component_includes: Optional, component dependencies
-    :type component_includes: ComponentIncludes
+    AbstractComponent
     """
+    component_includes = None
 
     def __init__(self, component_includes: ComponentIncludes = None):
         # self.app =
         # self.app = current_flaskly_app
         # self.app_config = self.app.config
-        self.component_includes = component_includes or ComponentIncludes()
+        if component_includes:
+            self.component_includes = component_includes
         # TODO: bootstrap components (get version from current app, raise if not included)
 
     @abstractmethod
@@ -46,7 +46,8 @@ class AbstractContainer(AbstractComponent):
     def __init__(self, children: ContainerChildren):
         if not isinstance(children, list):
             children = [children]
-        components = [c.component_includes for c in children if isinstance(c, AbstractComponent)]
+        components = [c.component_includes for c in children if
+                      isinstance(c, AbstractComponent) and c.component_includes is not None]
         container_includes = None
         if components:
             container_includes = _reduce(_add, components)
