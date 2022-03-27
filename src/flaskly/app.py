@@ -6,8 +6,9 @@ from flask_wtf.csrf import CSRFProtect as _CSRFProtect
 
 import flaskly.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
-from .components import PageResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
-    EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink, IClassIcon, AbstractIcon
+from .components import PageResponse, PageErrorResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
+    EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink, IClassIcon, AbstractIcon, \
+    RenderResponse
 from .form import FORM_RENDERING_TYPES, form_endpoint_func
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
@@ -24,6 +25,7 @@ class FlasklyApp:
                  include_alpinejs=True,
                  alpinejs_dependency=None,
                  logo_src=None,
+                 renderers=None,
                  **options):
         # from .auth import LogoutSessionInterface
 
@@ -90,7 +92,8 @@ class FlasklyApp:
             theme_default_includes = options.get('theme_default_includes', None)
             theme_layouts_mapping = options.get('theme_layouts_mapping', None)
             self.theme = DefaultTheme(bootstrap_version=bootstrap_version, bootstrap_theme=theme,
-                                      layouts_mapping=theme_layouts_mapping, include_bootstrap=include_bootstrap,
+                                      layouts_mapping=theme_layouts_mapping,
+                                      include_bootstrap=include_bootstrap,
                                       bootstrap_dependency=bootstrap_dependency,
                                       default_includes=theme_default_includes)
 
@@ -118,6 +121,11 @@ class FlasklyApp:
 
         # Logger
         self.logger = self.flask_app.logger
+
+        # Renderers
+        self.renderers = dict()  # TODO: default renderers
+        if renderers:
+            self.renderers.update(renderers)
 
     def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
         # Registering Blueprints
@@ -176,15 +184,34 @@ class FlasklyApp:
                 # p = cls(*args, **kwargs)
                 # return p.render()
                 page_response = f(*args, **kwargs)
+                if isinstance(page_response, _f.Response):
+                    return page_response
                 if not isinstance(page_response, PageResponse):
                     page_response = make_page_response(page_response)
                 pl = page_response.page_layout if page_response.page_layout is not None else page_layout
-                return self.get_layout(pl).render_response(page_response)
+                # try:
+                if isinstance(page_response, PageErrorResponse):
+                    render_response = self.get_layout('error').render(page_response=page_response)
+                else:
+                    render_response = self.get_layout(pl).render(page_response=page_response)
+
+                # except RenderException as e: # TODO: let the exception raise or keep the page structure and show error
+                #     render_response = self.get_layout('error').render(render_error=e.render_error)
+
+                # if isinstance(render_response, RenderError): already handled
+                #     return render_response.error_message, render_response.status_code  # Todo error template
+                if isinstance(render_response, RenderResponse):
+                    if render_response.status_code is not None:
+                        return render_response.content, render_response.status_code, render_response.headers
+                    else:
+                        return render_response.content, render_response.headers
+                else:
+                    return render_response
 
             return _wrap
 
         def decorator(f):
-            # _ep = endpoint if endpoint is not None else cls.__name__ + '.__init__'
+            # _ep = endpoint if endpoint is not None else cls.__name__ + '.__init__'rende
             _ep = endpoint if endpoint is not None else f.__name__
             if navigation:
                 _nt = navigation_title
@@ -225,13 +252,19 @@ class FlasklyApp:
 
         return decorator
 
-    def get_layout(self, layout_name, ignore=None):
-        ignore = ignore or list()
-        if self.theme.layouts_mapping not in ignore:
-            return self.theme.layouts_mapping.get_layout(layout_name)
-        if self.layout_mapping not in ignore:
-            return self.layout_mapping.get_layout(layout_name)
-        return self.layout_mapping.layouts['default']
+    def get_layout(self, layout_name):
+        # ignore = ignore or list()
+        # if self.theme.layouts_mapping not in ignore:
+        #     res = self.theme.layouts_mapping.get_layout(layout_name)
+        #     if res:
+        #         return res
+        # if self.layout_mapping not in ignore:
+        #     return self.layout_mapping.get_layout(layout_name)
+        # return self.layout_mapping.layouts['default']
+
+        # if self.theme:
+        return self.theme.layouts_mapping.get_layout(layout_name)
+        # return self.layouts_mapping.get_layout(layout_name)
 
     def render_core_template(self, template_name, **kwargs):
         # return self.core_jinja_env.get_template(template_name).render(*args, **kwargs)
@@ -330,6 +363,12 @@ class FlasklyApp:
         wrapper = self._page_view_functions[endpoint][1]
 
         bp.add_url_rule(rule, endpoint, wrapper, **add_url_options)
+
+    def find_renderer(self, cls) -> t.AbstractRenderer:
+        rendered_type = getattr(cls, 'rendered_type', None) or cls.__name__
+        if self.theme.renderers:
+            return self.theme.renderers.get(rendered_type, None) or self.renderers.get(rendered_type, None)
+        return self.renderers.get(rendered_type, None)
 
 
 def _form_render(self, **options) -> t.RenderReturnValue:

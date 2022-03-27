@@ -1,5 +1,5 @@
 import typing as _typing
-from typing import Optional, List, Dict, AnyStr, Set
+from typing import Optional, List, Dict, AnyStr, Set, Iterable
 
 import flask.typing as _flask_typing
 
@@ -13,7 +13,9 @@ Union = _typing.Union
 Callable = _typing.Callable
 Any = _typing.Any
 Tuple = _typing.Tuple
+Iterable = Iterable
 
+RenderResponse = "RenderResponse"
 RenderReturnValue = Union["RenderResponse", Optional[str]]
 Renderable = "Renderable"
 
@@ -24,21 +26,25 @@ Renderable = "Renderable"
 
 StatusCode = _flask_typing.StatusCode
 HeadersValue = _flask_typing.HeadersValue
-Block = Union[RenderReturnValue, "Renderable"]
-BlocksDict = dict[str, Block]
+Block = Union[RenderReturnValue, "Renderable", Callable]
+BlocksDict = Dict[str, Block]
 BlocksInit = Union[Block, BlocksDict]
 PageErrorResponseInit = Union[StatusCode, Tuple[StatusCode, str], Tuple[StatusCode, HeadersValue],
                               Tuple[StatusCode, str, HeadersValue]]
 PageResponseInit = Union[BlocksInit, Tuple[BlocksInit, StatusCode], Tuple[BlocksInit, StatusCode, HeadersValue],
                          Tuple[BlocksInit, HeadersValue], PageErrorResponseInit]
 
-PageRouteReturnValue = Union["PageResponse", PageResponseInit]
+PageResponse = "PageResponse"
+PageRouteReturnValue = Union[PageResponse, PageResponseInit]
 ComponentIncludes = "ComponentIncludes"
 # NavigationItem = Union["NavigationLink", "NavigationSeparator", "NavigationGroup"]
 NavigationItem = "NavigationItem"
 NavigationData = List[NavigationItem]
 
-ContainerChildren = Union[Renderable, List[Renderable]]
+ContainerChildren = Union[Block, Iterable[Block]]
 FormAction = "FormAction"
 FormActionInit = Union[FormAction, List[FormAction], "Form"]
 FormResponseReturn = Union["FormResponse", FormActionInit]
+AbstractWeakComponent = "AbstractWeakComponent"
+AbstractRenderer = "AbstractRenderer"
+RendererMapping = Dict[type, AbstractRenderer]

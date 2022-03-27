@@ -1,17 +1,17 @@
-from dataclasses import dataclass, field
+from abc import ABC
 
 from flaskly.includes import BootstrapDependency, ComponentIncludes
-from flaskly.typing import Optional
+from flaskly.typing import Optional, RendererMapping
 from .page_layout import LayoutMapping
 
 
-@dataclass()
-class Theme:
+class Theme(ABC):
     bootstrap_dependency: Optional[BootstrapDependency] = None
-    default_includes: Optional[ComponentIncludes] = field(default_factory=ComponentIncludes)
-    layouts_mapping: LayoutMapping = field(default_factory=LayoutMapping)
+    default_includes: Optional[ComponentIncludes] = None
+    layouts_mapping: Optional[LayoutMapping] = None
+    renderers: Optional[RendererMapping] = None
 
-    def __post_init__(self):
+    def __init__(self):
         self.default_includes = self.default_includes or ComponentIncludes()
         if self.bootstrap_dependency:
             self.default_includes.dependencies.insert(0, self.bootstrap_dependency)

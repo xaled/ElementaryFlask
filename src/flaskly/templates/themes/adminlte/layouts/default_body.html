@@ -69,7 +69,7 @@
         </section>
 
         <section class="content">
-            {{ rendered_blocks.main | safe }}
+            {{ main | safe }}
 
         </section>
 
@@ -85,6 +85,6 @@
 
 </div>
 
-{{ component_includes.render_body_includes() | safe }}
+{{ body_includes | safe }}
 
 </body>

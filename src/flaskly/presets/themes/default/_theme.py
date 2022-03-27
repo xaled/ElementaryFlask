@@ -13,6 +13,7 @@ class DefaultTheme(Theme):
             layouts_mapping = LayoutMapping(
                 default=TopNavigationLayout() if include_bootstrap else EmptyPageLayout()
             )
-        super(DefaultTheme, self).__init__(bootstrap_dependency=bootstrap_dependency,
-                                           default_includes=default_includes,
-                                           layouts_mapping=layouts_mapping)
+        self.bootstrap_dependency = bootstrap_dependency
+        self.default_includes = default_includes
+        self.layouts_mapping = layouts_mapping
+        super(DefaultTheme, self).__init__()

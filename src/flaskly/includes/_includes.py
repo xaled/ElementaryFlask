@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
 from html import escape as html_escape
+from typing import Iterable
 
 from flaskly.typing import OptionalSet, Union, List, Optional
+
+REDUCE_INCLUDES_MAX_DEPTH = 5
 
 
 @dataclass()
@@ -260,3 +263,32 @@ def _compare_theme(t1, t2):
         return t2
     else:
         raise IncludeThemeIncompatibility()
+
+
+def reduce_includes(*includes_or_components) -> ComponentIncludes:
+    def _reduce_includes(*args, depth=0) -> Optional[ComponentIncludes]:
+        ret = None
+        for itm in args:
+            if isinstance(itm, Iterable) and depth < REDUCE_INCLUDES_MAX_DEPTH:
+                itm = _reduce_includes(*itm, depth=depth + 1)
+            elif isinstance(itm, Iterable):
+                ValueError('includes max depth reached')
+
+            if itm is None:
+                continue
+
+            # if isinstance(itm, AbstractComponent):
+            #     itm = itm.component_includes
+
+            if isinstance(itm, ComponentIncludes):
+                if ret is None:
+                    ret = itm
+                else:
+                    ret += itm
+
+        return ret
+
+    reduced = _reduce_includes(*includes_or_components)
+    if reduced is None:
+        return ComponentIncludes()
+    return reduced
