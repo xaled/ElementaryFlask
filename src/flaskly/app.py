@@ -9,7 +9,7 @@ from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import PageResponse, PageErrorResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
     EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink, IClassIcon, AbstractIcon, \
     RenderResponse
-from .form import FORM_RENDERING_TYPES, form_endpoint_func
+from .components.form import wrap_form_cls, form_endpoint_func, default_form_render
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
 
@@ -123,7 +123,7 @@ class FlasklyApp:
         self.logger = self.flask_app.logger
 
         # Renderers
-        self.renderers = dict()  # TODO: default renderers
+        self.renderers = dict(DEFAULT_RENDERERS)
         if renderers:
             self.renderers.update(renderers)
 
@@ -281,38 +281,9 @@ class FlasklyApp:
     def url_for(self, endpoint: str, **values: t.Any) -> str:
         return _f.url_for(endpoint, **values)
 
-    # def form(self,
-    #             name: t.Optional[str] = None,
-    #             **attrs: t.Any,
-    #             ):
-    #     """Creates a new :class:`Form` and uses the decorated function as
-    #     callback.
-    #
-    #     :param name: the name of the form. Default: function name.
-    #     """
-    #
-    #     def _form_func(f):
-    #         def _wrap(*args, **kwargs): # TODO typing form response
-    #             form_response = f(*args, **kwargs)
-    #             # TODO: process & convert
-    #             return _f.jsonify(form_response)
-    #
-    #         return _wrap
-    #
-    #     def decorator(f) -> Form:
-    #         n = name or f.__name__
-    #         frm = Form.make_form(f, n, attrs)
-    #
-    #         # TODO: register form endpoint
-    #
-    #         self._register_endpoint_function(self.form_bp, rule, frm, n, _form_func, options)
-    #         return frm
-    #
-    #     return decorator
-
     def form(self,
              name: t.Optional[str] = None,
-             rendering_type: str = 'default',
+             rendering_type: str = 'stateful',
              **options: t.Any,
              ):
         """Creates a new :class:`Form` and uses the decorated function as
@@ -323,8 +294,8 @@ class FlasklyApp:
         :param options: extra options passed to flask add_url_rule.
         """
 
-        if rendering_type not in FORM_RENDERING_TYPES:
-            rendering_type = 'default'
+        # if rendering_type not in FORM_RENDERING_TYPES:
+        #     rendering_type = 'default'
 
         def decorator(cls):
             n = name or cls.__name__
@@ -332,15 +303,8 @@ class FlasklyApp:
             if not _form_name_validator.match(rule):
                 raise ValueError('Forbidden value for rule: ' + rule)
 
-            # make class renderable
-            # new_cls = type(cls.__name__, (cls, Renderable), {
-            #     'render': _form_render,
-            #     'flaskly_form_id': 'form.' + n
-            # })
-            setattr(cls, 'render', _form_render)
-            setattr(cls, 'form_rendering_type', rendering_type)
-            setattr(cls, 'flaskly_form_id', 'form.' + n)
-            # cls.__mro__ = cls.__mro__ + (Renderable, )
+            # Make class renderable
+            wrap_form_cls(cls, form_id='form.' + n, rendering_type=rendering_type)
 
             # register form endpoint
             options['methods'] = ['POST']
@@ -364,12 +328,7 @@ class FlasklyApp:
 
         bp.add_url_rule(rule, endpoint, wrapper, **add_url_options)
 
-    def find_renderer(self, cls) -> t.AbstractRenderer:
-        rendered_type = getattr(cls, 'rendered_type', None) or cls.__name__
-        if self.theme.renderers:
-            return self.theme.renderers.get(rendered_type, None) or self.renderers.get(rendered_type, None)
-        return self.renderers.get(rendered_type, None)
 
-
-def _form_render(self, **options) -> t.RenderReturnValue:
-    return FORM_RENDERING_TYPES[self.form_rendering_type](self)
+DEFAULT_RENDERERS = {
+    'Form': default_form_render
+}

@@ -48,3 +48,4 @@ FormResponseReturn = Union["FormResponse", FormActionInit]
 AbstractWeakComponent = "AbstractWeakComponent"
 AbstractRenderer = "AbstractRenderer"
 RendererMapping = Dict[type, AbstractRenderer]
+Renderer = Union[AbstractRenderer, Callable]

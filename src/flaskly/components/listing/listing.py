@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from flask import request
 from werkzeug.datastructures import ImmutableMultiDict, CombinedMultiDict
 
-from flaskly.form import error
+from flaskly.components.form import error
 from flaskly.globals import current_flaskly_app as _app
 from flaskly.typing import RenderReturnValue, FormResponseReturn
 from ..component import AbstractComponent
