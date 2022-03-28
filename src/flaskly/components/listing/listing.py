@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from html import escape as html_escape
+from urllib.parse import urlencode
 
 from flask import request
 from flask_wtf import FlaskForm
@@ -64,9 +65,11 @@ class ListingField:
 
 def default_listing_render(listing: "AbstractListing", /, **options) -> RenderReturnValue:
     listing.init_listing_cls()
-
+    items, count_str, next_page, previous_page = listing.list_items_request()
     ret = _app.core_jinja_env.render_template("listing/default_listing.html",
                                               listing=listing,
+                                              items=items, count_str=count_str,
+                                              next_page=next_page, previous_page=previous_page,
                                               )
     listing.view_page_kwargs = None
     return ret
@@ -113,6 +116,7 @@ class AbstractListing(AbstractWeakComponent, ABC):
     _init = False
     default_renderer = default_listing_render
     show_header = True
+    items_per_page = 20
 
     def __init__(self):
         super(AbstractListing, self).__init__()
@@ -133,13 +137,48 @@ class AbstractListing(AbstractWeakComponent, ABC):
             return form_response
         return False
 
+    def list_items_request(self):
+        def _correct_page(p, mp):
+            if p < 1:
+                p = 1
+            if p > mp:
+                p = mp
+            return p
+
+        def _page_uri(p, f):
+            t = (("page", p),)
+            if f:
+                t += (('filters', f),)
+            return '?' + urlencode(t)
+
+        try:
+            page = request.args.get('page', 1, type=int)
+        except:
+            page = 1
+        items_per_page = self.items_per_page
+        filters = request.args.get('filters', None)
+        c_total = self.count_items(filters=filters)
+        max_page = (c_total // items_per_page) + (1 if c_total % items_per_page else 0)
+        page = _correct_page(page, max_page)
+
+        c_f = (page - 1) * items_per_page + 1
+        c_t = min(page * items_per_page, c_total)
+        next_page = _page_uri(_correct_page(page + 1, max_page), filters)
+        previous_page = _page_uri(_correct_page(page - 1, max_page), filters)
+        count_str = f"{c_f}-{c_t}/{c_total}"
+        return self.list_items(
+            page=page, items_per_page=items_per_page, filters=filters), count_str, next_page, previous_page
+
     @abstractmethod
     def list_items(self, page=1, items_per_page=20, filters=None):
         raise NotImplementedError()
 
     @abstractmethod
-    def __len__(self):
+    def count_items(self, filters=None):
         raise NotImplementedError()
+
+    def __len__(self):
+        return self.count_items()
 
     @classmethod
     def init_listing_cls(cls):

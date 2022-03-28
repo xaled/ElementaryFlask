@@ -36,14 +36,14 @@
                     <i class="fas fa-sync-alt"></i>
                 </button>
                 <div class="float-right">
-                    1-50/200
+                    {{ count_str }}
                     <div class="btn-group">
-                        <button type="button" class="btn btn-default btn-sm">
+                        <a type="button" class="btn btn-default btn-sm" href="{{ previous_page }}">
                             <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button type="button" class="btn btn-default btn-sm">
+                        </a>
+                        <a type="button" class="btn btn-default btn-sm" href="{{ next_page }}">
                             <i class="fas fa-chevron-right"></i>
-                        </button>
+                        </a>
                     </div>
 
                 </div>
@@ -61,7 +61,7 @@
 
                     </thead>
                     <tbody>
-                    {% for item in listing.list_items() %}
+                    {% for item in items %}
                         <tr>
                             <td class="shrink-cell">
                                 <label>
