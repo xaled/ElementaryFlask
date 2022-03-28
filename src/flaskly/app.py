@@ -7,9 +7,10 @@ from flask_wtf.csrf import CSRFProtect as _CSRFProtect
 import flaskly.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import PageResponse, PageErrorResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
-    EmptyPageLayout, AbstractNavigationHandler, StaticNavigationHandler, NavigationLink, IClassIcon, AbstractIcon, \
+    EmptyPageLayout, IClassIcon, AbstractIcon, \
     RenderResponse
 from .components.form import wrap_form_cls, form_endpoint_func, default_form_render
+from .components.navigation import AbstractNavigationProvider, StaticNavigationProvider, Navigation, NavigationLink
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
 
@@ -21,7 +22,7 @@ class FlasklyApp:
                  default_includes=None, default_meta_tags=None, default_title=None, icons: t.List[FavIcon] = None,
                  theme: t.Optional[t.Union[Theme, str]] = None, include_bootstrap=True,
                  navigation_map: dict = None,
-                 navigation_handler: AbstractNavigationHandler = None,
+                 navigation_provider: AbstractNavigationProvider = None,
                  include_alpinejs=True,
                  alpinejs_dependency=None,
                  logo_src=None,
@@ -117,7 +118,8 @@ class FlasklyApp:
 
         # Navigation
         self.config.navigation_map = navigation_map or []
-        self.config.navigation_handler = navigation_handler or StaticNavigationHandler(self.config.navigation_map)
+        self.config.navigation_provider = navigation_provider or StaticNavigationProvider(self.config.navigation_map)
+        self.config.navigation = Navigation()
 
         # Logger
         self.logger = self.flask_app.logger
@@ -270,8 +272,8 @@ class FlasklyApp:
         # return self.core_jinja_env.get_template(template_name).render(*args, **kwargs)
         return self.core_jinja_env.render_template(template_name, **kwargs)
 
-    def set_navigation_handler(self, navigation_handler: AbstractNavigationHandler):
-        self.config.navigation_handler = navigation_handler
+    def set_navigation_provider(self, navigation_provider: AbstractNavigationProvider):
+        self.config.navigation_provider = navigation_provider
 
     def extend_navigation_map(self, *items, clear_old=False):
         if clear_old:

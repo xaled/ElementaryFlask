@@ -1,44 +1,8 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from html import escape as html_escape
 
 from flaskly.globals import current_flaskly_app as _app
-from flaskly.typing import RenderReturnValue, Optional, List, NavigationData
-from .component import AbstractComponent
-from .icon import AbstractIcon
-
-
-class AbstractNavigationHandler(ABC):
-    @abstractmethod
-    def generate_navmap(self) -> NavigationData:
-        raise NotImplementedError()
-
-
-class AbstractNavigation(AbstractComponent):
-    def __init__(self, navigation_handler: AbstractNavigationHandler = None):
-        super().__init__()
-        self.navigation_handler = navigation_handler or DefaultNavigationHandler()
-
-    def render(self, **options) -> RenderReturnValue:
-        nav_data = self.navigation_handler.generate_navmap()
-        return self.render_nav(nav_data, **options)
-
-    def render_nav(self, nav_data: NavigationData, **options) -> RenderReturnValue:
-        raise NotImplementedError()
-
-
-class DefaultNavigationHandler(AbstractNavigationHandler):
-    def generate_navmap(self) -> NavigationData:
-        return _app.config.navigation_handler.generate_navmap()
-
-
-class StaticNavigationHandler(AbstractNavigationHandler):
-    def __init__(self, navigation_map):
-        super(StaticNavigationHandler, self).__init__()
-        self.navigation_map = navigation_map
-
-    def generate_navmap(self) -> NavigationData:
-        return self.navigation_map
+from flaskly.typing import Optional, AbstractIcon, List
 
 
 @dataclass
@@ -82,6 +46,9 @@ class NavigationGroup(NavigationItem):
     def __init__(self, title, icon=None, items_list: List[NavigationItem] = None):
         super(NavigationGroup, self).__init__(title, navigation_type='group', icon=icon)
         self.items_list = items_list or list()
+
+    def __iter__(self):
+        return self.items_list.__iter__()
 
 
 class NavigationSeparator(NavigationItem):

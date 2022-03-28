@@ -49,7 +49,7 @@
     </header>
 
 
-    {% include 'components/navigation.html' %}
+    {{ flaskly_config.navigation | safe }}
     <div class="content-wrapper">
 
         <section class="content-header">

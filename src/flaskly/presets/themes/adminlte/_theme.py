@@ -2,7 +2,7 @@ from flaskly.components import Theme, LayoutMapping
 from flaskly.includes import ComponentIncludes, Dependency, CSSDependencyLink, JavascriptDependencyLink
 from flaskly.includes import adminlte_dependency
 from .layouts import AdminLTEDefaultLayout
-from .renderers import HTTPErrorRenderer
+from .renderers import render_http_error, render_navigation
 
 
 class AdminLTETheme(Theme):
@@ -25,4 +25,7 @@ class AdminLTETheme(Theme):
     layouts_mapping = LayoutMapping(
         default=AdminLTEDefaultLayout(),
     )
-    renderers = {"HTTPError": HTTPErrorRenderer()}
+    renderers = {
+        "HTTPError": render_http_error,
+        "Navigation": render_navigation
+    }

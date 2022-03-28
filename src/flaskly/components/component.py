@@ -38,6 +38,12 @@ class AbstractComponent(Renderable):
     def render(self, **options) -> RenderReturnValue:
         raise NotImplementedError()
 
+    def __str__(self):
+        return self.render()
+
+    def __call__(self, **options) -> RenderReturnValue:
+        return self.render(**options)
+
 
 def _render(block: Block, **options) -> RenderReturnValue:
     if isinstance(block, str) or isinstance(block, RenderResponse):

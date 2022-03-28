@@ -25,7 +25,7 @@
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                 data-accordion="false">
-                {% for itm in flaskly_config.navigation_handler.generate_navmap() %}
+                {% for itm in navigation.navigation_provider.generate_navigation() %}
                     <li class="nav-item">
                         <a href="{{ itm.get_link() }}" class="nav-link">
                             {% if itm.icon and itm.icon.icon_class %}

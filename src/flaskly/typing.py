@@ -39,8 +39,10 @@ PageRouteReturnValue = Union[PageResponse, PageResponseInit]
 ComponentIncludes = "ComponentIncludes"
 # NavigationItem = Union["NavigationLink", "NavigationSeparator", "NavigationGroup"]
 NavigationItem = "NavigationItem"
-NavigationData = List[NavigationItem]
-
+# NavigationData = List[NavigationItem]
+# NavigationMap = "NavigationMap"
+NavigationMapInit = Union["NavigationGroup", Iterable[NavigationItem]]
+Navigation = "Navigation"
 ContainerChildren = Union[Block, Iterable[Block]]
 FormAction = "FormAction"
 FormActionInit = Union[FormAction, List[FormAction], "Form"]
@@ -49,3 +51,4 @@ AbstractWeakComponent = "AbstractWeakComponent"
 AbstractRenderer = "AbstractRenderer"
 RendererMapping = Dict[type, AbstractRenderer]
 Renderer = Union[AbstractRenderer, Callable]
+AbstractIcon = "AbstractIcon"
