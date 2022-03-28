@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from html import escape as html_escape
 from urllib.parse import urlencode
 
 from flask import request
@@ -8,102 +6,13 @@ from flask_wtf import FlaskForm
 from werkzeug.datastructures import ImmutableMultiDict, CombinedMultiDict
 
 from flaskly.components.form import error, FormResponse
-from flaskly.globals import current_flaskly_app as _app
-from flaskly.typing import RenderReturnValue, FormResponseReturn, Callable
+from flaskly.typing import FormResponseReturn
+from .action import ListingAction
+from .field import ListingField
+from .renderer import default_listing_render
 from ..weak_component import AbstractWeakComponent
 
 SUBMIT_METHODS = ("POST", "PUT", "PATCH", "DELETE")
-
-
-@dataclass()
-class ListingAction:
-    func: Callable
-    name: str
-    batch: bool = False
-    form_cls: type = None
-    hidden: bool = False
-
-    def __call__(self, *args, **kwargs):
-        return self.func(*args, **kwargs)
-
-
-@dataclass()
-class ListingField:
-    field_name: str
-    field_title: str = None
-    shrink_cell: bool = False
-    td_class: str = None
-    th_class: str = None
-    safe_html: bool = False
-    generator: Callable = None
-    formatter: Callable = None
-    order: int = 5
-    _td_class: str = field(init=False, default=None)
-    _th_class: str = field(init=False, default=None)
-
-    def td(self, item):
-        val = self.generator(item) if self.generator is not None else getattr(item, self.field_name, "None")
-        if not self.safe_html:
-            val = html_escape(val)
-        if self.formatter:
-            val = self.formatter(val)
-
-        if self._td_class is None:
-            _td_class = ((self.td_class or "") + " shrink-cell" if self.shrink_cell else "").strip()
-            self._td_class = f'class="{_td_class}"' if _td_class else ""
-
-        return f"""<td {self._td_class}>{val}</td>"""
-
-    def th(self):
-        if self.field_title is None:
-            self.field_title = self.field_name
-        if self._th_class is None:
-            _th_class = ((self.th_class or "") + " shrink-cell" if self.shrink_cell else "").strip()
-            self._th_class = f'class="{_th_class}"' if _th_class else ""
-        return f"""<th {self._th_class} scope="col">{self.field_title}</th>"""
-
-
-def default_listing_render(listing: "AbstractListing", /, **options) -> RenderReturnValue:
-    listing.init_listing_cls()
-    items, count_str, next_page, previous_page = listing.list_items_request()
-    ret = _app.core_jinja_env.render_template("listing/default_listing.html",
-                                              listing=listing,
-                                              items=items, count_str=count_str,
-                                              next_page=next_page, previous_page=previous_page,
-                                              )
-    listing.view_page_kwargs = None
-    return ret
-
-
-def listing_field(field_name, /, *,
-                  field_title: str = None,
-                  shrink_cell: bool = False,
-                  td_class: str = None,
-                  th_class: str = None,
-                  safe_html: bool = False,
-                  formatter: Callable = None,
-                  order: int = 5):
-    def decorator(f):
-        return ListingField(field_name,
-                            field_title=field_title,
-                            shrink_cell=shrink_cell,
-                            td_class=td_class,
-                            th_class=th_class,
-                            safe_html=safe_html,
-                            formatter=formatter,
-                            order=order,
-                            generator=f)
-
-    return decorator
-
-
-def listing_action(name=None, /, *, batch=False, form_cls=None, hidden=False):
-    def decorator(f):
-        n = name or f.__name__
-        # f.flaskly_listing_action =
-        return ListingAction(f, n, batch=batch, form_cls=form_cls, hidden=hidden)
-
-    return decorator
 
 
 class AbstractListing(AbstractWeakComponent, ABC):
