@@ -1,40 +1,136 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from html import escape as html_escape
 
 from flask import request
+from flask_wtf import FlaskForm
 from werkzeug.datastructures import ImmutableMultiDict, CombinedMultiDict
 
-from flaskly.components.form import error
+from flaskly.components.form import error, FormResponse
 from flaskly.globals import current_flaskly_app as _app
-from flaskly.typing import RenderReturnValue, FormResponseReturn
-from ..component import AbstractComponent
+from flaskly.typing import RenderReturnValue, FormResponseReturn, Callable
+from ..weak_component import AbstractWeakComponent
 
 SUBMIT_METHODS = ("POST", "PUT", "PATCH", "DELETE")
 
 
 @dataclass()
 class ListingAction:
+    func: Callable
     name: str
     batch: bool = False
     form_cls: type = None
+    hidden: bool = False
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
 
 
-class AbstractListing(AbstractComponent, ABC):
+@dataclass()
+class ListingField:
+    field_name: str
+    field_title: str = None
+    shrink_cell: bool = False
+    td_class: str = None
+    th_class: str = None
+    safe_html: bool = False
+    generator: Callable = None
+    formatter: Callable = None
+    order: int = 5
+    _td_class: str = field(init=False, default=None)
+    _th_class: str = field(init=False, default=None)
+
+    def td(self, item):
+        val = self.generator(item) if self.generator is not None else getattr(item, self.field_name, "None")
+        if not self.safe_html:
+            val = html_escape(val)
+        if self.formatter:
+            val = self.formatter(val)
+
+        if self._td_class is None:
+            _td_class = ((self.td_class or "") + " shrink-cell" if self.shrink_cell else "").strip()
+            self._td_class = f'class="{_td_class}"' if _td_class else ""
+
+        return f"""<td {self._td_class}>{val}</td>"""
+
+    def th(self):
+        if self.field_title is None:
+            self.field_title = self.field_name
+        if self._th_class is None:
+            _th_class = ((self.th_class or "") + " shrink-cell" if self.shrink_cell else "").strip()
+            self._th_class = f'class="{_th_class}"' if _th_class else ""
+        return f"""<th {self._th_class} scope="col">{self.field_title}</th>"""
+
+
+def default_listing_render(listing: "AbstractListing", /, **options) -> RenderReturnValue:
+    listing.init_listing_cls()
+
+    ret = _app.core_jinja_env.render_template("listing/default_listing.html",
+                                              listing=listing,
+                                              )
+    listing.view_page_kwargs = None
+    return ret
+
+
+def listing_field(field_name, /, *,
+                  field_title: str = None,
+                  shrink_cell: bool = False,
+                  td_class: str = None,
+                  th_class: str = None,
+                  safe_html: bool = False,
+                  formatter: Callable = None,
+                  order: int = 5):
+    def decorator(f):
+        return ListingField(field_name,
+                            field_title=field_title,
+                            shrink_cell=shrink_cell,
+                            td_class=td_class,
+                            th_class=th_class,
+                            safe_html=safe_html,
+                            formatter=formatter,
+                            order=order,
+                            generator=f)
+
+    return decorator
+
+
+def listing_action(name=None, /, *, batch=False, form_cls=None, hidden=False):
+    def decorator(f):
+        n = name or f.__name__
+        # f.flaskly_listing_action =
+        return ListingAction(f, n, batch=batch, form_cls=form_cls, hidden=hidden)
+
+    return decorator
+
+
+class AbstractListing(AbstractWeakComponent, ABC):
     fields = None
     id_field = None
     item_view_uri = None
+    item_edit_uri = None
     _actions = None
+    _fields = None
+    _init = False
+    default_renderer = default_listing_render
+    show_header = True
 
     def __init__(self):
         super(AbstractListing, self).__init__()
         self.view_page_kwargs = None
+        self.view_form = FlaskForm()
 
     def __call__(self, **kwargs):
         if bool(request) and request.method == 'GET':
             self.view_page_kwargs = kwargs
             return self
         if _is_submitted():
-            return self.on_submit()
+            # TODO: validate on submit
+            form_response = self.on_submit()
+
+            if not isinstance(form_response, FormResponse):
+                form_response = FormResponse(form_response)
+
+            return form_response
         return False
 
     @abstractmethod
@@ -45,34 +141,42 @@ class AbstractListing(AbstractComponent, ABC):
     def __len__(self):
         raise NotImplementedError()
 
-    def render(self, **options) -> RenderReturnValue:
-        if self._actions is None:
-            self.init_actions()
-
-        ret = _app.core_jinja_env.render_template("listing/default_listing.html",
-                                                  listing=self,
-                                                  )
-        self.view_page_kwargs = None
-        return ret
-
     @classmethod
-    def init_actions(cls):
-        actions = list()
-        for key in dir(cls):
-            itm = getattr(cls, key)
-            if callable(itm) and getattr(itm, 'flaskly_listing_action', False):
-                actions.append(key)
-        cls._actions = tuple(actions)
+    def init_listing_cls(cls):
+        if not cls._init:
+            actions = list()
+            fields = dict()
+
+            if cls.fields is not None:
+                for field_or_field_name in cls.fields:
+                    if isinstance(field_or_field_name, ListingField):
+                        fields[field_or_field_name.field_name] = field_or_field_name
+                    else:
+                        fields[field_or_field_name] = ListingField(field_or_field_name)
+
+            for key in dir(cls):
+                itm = getattr(cls, key)
+                # if getattr(itm, 'flaskly_listing_action', False) and callable(itm):
+                if isinstance(itm, ListingAction):
+                    actions.append(key)
+                if isinstance(itm, ListingField):
+                    fields[itm.field_name] = itm
+            cls._actions = tuple(actions)
+
+            # fields = dict()
+
+            cls._fields = tuple(sorted(fields.values(), key=lambda x: x.order))
+            cls._init = True
 
     def on_submit(self) -> FormResponseReturn:
-        if self._actions is None:
-            self.init_actions()
+        # if self._actions is None:
+        self.init_listing_cls()
         formdata, action_name, ids = _get_form_data_splits()
 
         if ids is None:
             return error('No item ID was sent!')
 
-        if action_name is None or not action_name in self._actions:
+        if action_name is None or action_name not in self._actions:
             return error('Unknown action was sent!')
 
         action_func = getattr(self, self._actions[action_name])
@@ -90,14 +194,41 @@ class AbstractListing(AbstractComponent, ABC):
     def page_view(cls, **kwargs):
         return cls()(**kwargs)
 
+    def hidden_thead(self):
+        return "" if self.show_header else "hidden"
 
-def listing_action(name=None, batch=False, form_cls=None):
-    def decorator(f):
-        n = name or f.__name__
-        f.flaskly_listing_action = ListingAction(n, batch=batch, form_cls=form_cls)
-        return f
-
-    return decorator
+    # @classmethod
+    # def field_title(cls, field_name):
+    #     if not hasattr(cls, field_name + '_field_title'):
+    #         setattr(cls, field_name + '_field_title', field_name)
+    #     return getattr(cls, field_name + '_field_title')
+    #
+    # @classmethod
+    # def field_generator(cls, field_name):
+    #     def _generator(itm):
+    #         return getattr(itm, field_name, None)
+    #
+    #     if not hasattr(cls, field_name + '_generator'):
+    #         setattr(cls, field_name + '_generator', _generator)
+    #     return getattr(cls, field_name + '_generator')
+    #
+    # @classmethod
+    # def field_formatter(cls, field_name):
+    #     def _formatter(val):
+    #         return html_escape(val)
+    #
+    #     if not hasattr(cls, field_name + '_formatter'):
+    #         setattr(cls, field_name + '_formatter', _formatter)
+    #     return getattr(cls, field_name + '_formatter')
+    #
+    # @classmethod
+    # def field_html_generator(cls, field_name):
+    #     def _html_generator(itm):
+    #         return cls.field_formatter(field_name)(cls.field_generator(field_name)(itm))
+    #
+    #     if not hasattr(cls, field_name + '_html_generator'):
+    #         setattr(cls, field_name + '_html_generator', _html_generator)
+    #     return getattr(cls, field_name + '_html_generator')
 
 
 def _get_form_data_splits():

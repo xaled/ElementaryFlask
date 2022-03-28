@@ -9,7 +9,7 @@ from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import PageResponse, PageErrorResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
     EmptyPageLayout, IClassIcon, AbstractIcon, \
     RenderResponse
-from .components.form import wrap_form_cls, form_endpoint_func, default_form_render
+from .components.form import wrap_form_cls, form_endpoint_func, default_form_render, FormResponse
 from .components.navigation import AbstractNavigationProvider, StaticNavigationProvider, Navigation, NavigationLink
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
@@ -188,6 +188,8 @@ class FlasklyApp:
                 page_response = f(*args, **kwargs)
                 if isinstance(page_response, _f.Response):
                     return page_response
+                if isinstance(page_response, FormResponse):
+                    return page_response.to_dict()
                 if not isinstance(page_response, PageResponse):
                     page_response = make_page_response(page_response)
                 pl = page_response.page_layout if page_response.page_layout is not None else page_layout

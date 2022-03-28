@@ -1,4 +1,5 @@
-<form method="post">
+<form method="post" onsubmit="Flaskly.submitForm(this); return false">
+    {{ listing.view_form.hidden_tag() }}
     <div class="card">
         <div class="card-header">
             <div class="card-tools">
@@ -50,32 +51,30 @@
             </div>
             <div class="table-responsive">
                 <table class="table table-hover table-sm ">
-                    <thead>
+                    <thead {{ listing.hidden_thead() }}>
                     <tr>
-                        <th class="shrink-cell"></th>
-                        <th class="shrink-cell"></th>
-                        {% for f in listing.fields %}
-                            <th scope="col">{{ f }}</th>
+                        <th class="shrink-cell" scope="col"></th>
+                        {% for  f in listing._fields %}
+                            {{ f.th() | safe }}
                         {% endfor %}
-                        <th class="shrink-cell"></th>
+                        <th class="shrink-cell" scope="col"></th>
 
                     </thead>
                     <tbody>
                     {% for item in listing.list_items() %}
                         <tr>
-                            <th class="shrink-cell" scope="row">
+                            <td class="shrink-cell">
                                 <label>
-                                    <input type="checkbox" name="id" value="{{ item[listing.id_field] }}">
+                                    <input type="checkbox" name="id" value="{{ item[listing.id_field] }}" class="mr-2">
                                 </label>
-                            </th>
-                            <td class="mailbox-star shrink-cell"><i class="fas fa-star text-warning"></i></td>
-                            {% for f in listing.fields %}
-                                <td>{{ item[f] }}</td>
+                            </td>
+                            {% for f in listing._fields %}
+                                {{ f.td(item) | safe }}
                             {% endfor %}
                             <td class="shrink-cell">
                                 <div class="btn-group" role="group">
                                     {% for a in listing._actions %}
-                                        <input type="submit" value="{{ a }}" class="btn btn-default">
+                                        <input type="submit" value="{{ a }}" class="btn btn-default btn-sm">
                                     {% endfor %}
 
                                 </div>
