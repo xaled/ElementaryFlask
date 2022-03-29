@@ -131,16 +131,17 @@ class AbstractListing(AbstractWeakComponent, ABC):
         if action_name is None or action_name not in self._actions:
             return error('Unknown action was sent!')
 
-        action_func = getattr(self, self._actions[action_name])
-        action = action_func.flaskly_listing_action
+        action = getattr(self, action_name)
+        # action = action_func.flaskly_listing_action
 
-        if not (action.batch or isinstance(ids, str)) or not (action.form_cls is None or formdata):
+        if not (action.batch or len(ids) == 1) or not (action.form_cls is None or formdata):
             return error('Error processing action data!')
 
-        ids = [ids] if isinstance(ids, str) and action.batch else ids
-        if action.form_cls:
-            return action_func(ids, action.form_cls(formdata=formdata))
-        return action_func(ids)
+        # ids = [ids] if isinstance(ids, str) and action.batch else ids
+        ids = ids[0] if not action.batch else ids
+        # if action.form_cls: # TODO modal form support
+        #     return action(ids, action.form_cls(formdata=formdata))
+        return action(self, ids)
 
     @classmethod
     def page_view(cls, **kwargs):
@@ -148,6 +149,9 @@ class AbstractListing(AbstractWeakComponent, ABC):
 
     def hidden_thead(self):
         return "" if self.show_header else "hidden"
+
+    def listing_id(self):
+        return self.__class__.__name__ + '.' + str(hash(self))
 
     # @classmethod
     # def field_title(cls, field_name):
@@ -196,10 +200,12 @@ def _get_form_data_splits():
 
 
 def _split_form_data(obj):
-    ret = dict(**obj)
-    action = ret.pop('action', None)
-    ids = ret.pop('ids', None)
-    return ImmutableMultiDict(ret), action, ids
+    # ret = dict(**obj)
+    obj = obj.copy()
+    action = obj.pop('action', None)
+    ids = obj.poplist("ids")
+    _app.logger.debug(repr(ids))
+    return ImmutableMultiDict(obj), action, ids
 
 
 def _is_submitted():

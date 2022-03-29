@@ -1,6 +1,7 @@
 from flask.globals import session, request, g
 from flask.helpers import get_flashed_messages, url_for
 from jinja2 import Environment, FileSystemLoader
+from jinja2.environment import DEFAULT_FILTERS
 
 from flaskly.globals import current_flaskly_app as _app
 
@@ -30,7 +31,12 @@ class Jinja2Env:
             # navigation_handler=_app.navigation_handler,
 
         )
-        # TODO app filters
+        # app filters
+        for k, v in _app.flask_app.jinja_env.filters.items():
+            if k not in self.jinja2_env.filters or k in DEFAULT_FILTERS:
+                self.jinja2_env.filters[k] = v
+
+        # TODO Context Processors
 
     def render_template(self, template_name, **options):
         if not self.flaskly_app:

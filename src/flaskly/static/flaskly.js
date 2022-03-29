@@ -1,14 +1,8 @@
 var Flaskly = {
-    submitForm: async function (frm) {
-        formData = new FormData(frm);
-        var object = {};
-        formData.forEach(function (value, key) {
-            object[key] = value;
-        });
-        console.log(object);
-        fetch(frm.action, {
+    privateSubmitForm: function (frm, action, body) {
+        fetch(action, {
             method: 'POST',
-            body: new FormData(frm),
+            body: body,
         })
             .then(response => response.json())
             .then(data => {
@@ -19,8 +13,50 @@ var Flaskly = {
                 console.error('Error:', error);
                 Flaskly.toast(error);
             });
+    },
+    submitForm: async function (frm) {
+        Flaskly.privateSubmitForm(frm, frm.action, new FormData(frm))
+    },
 
+    submitListingAction: async function (frm_id, button) {
+        let frm = document.getElementById(frm_id);
+        // let data = Flaskly.serializeForm(frm);
+        let frmData = new FormData(frm);
+        let button_info = JSON.parse(button.dataset.info);
+        var ids = Array();
 
+        if (button_info.item_id === 'batch') {
+            if (!frmData.has('id')) {
+                return null;
+            }
+            ids = frmData.getAll('id');
+
+        } else {
+            ids.push(button_info.item_id);
+        }
+        // frmData = FormData();
+        frmData.append("ids", ids);
+        frmData.append("action", button_info.action);
+        frmData.delete("id");
+        return Flaskly.privateSubmitForm(null, "", frmData);
+
+    },
+
+    serializeForm: function (frm, doseq = true) {
+        formData = new FormData(frm);
+        var object = {};
+        formData.forEach(function (value, key) {
+            if (!(key in object && doseq)) {
+                object[key] = value;
+            } else {
+                if (!Array.isArray(object[key])) {
+                    object[key] = Array(object[key]);
+                }
+                object[key].push(value);
+
+            }
+        });
+        return object;
     },
 
     formResponse: function (formResponseData, frm = null, el = null) {

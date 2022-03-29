@@ -129,6 +129,9 @@ class FlasklyApp:
         if renderers:
             self.renderers.update(renderers)
 
+        # Default Template filters
+        # self.flask_app.add_template_filter()
+
     def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
         # Registering Blueprints
         self.flask_app.register_blueprint(self.core_bp)

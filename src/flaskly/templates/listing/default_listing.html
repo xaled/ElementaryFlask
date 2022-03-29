@@ -1,4 +1,4 @@
-<form method="post" onsubmit="Flaskly.submitForm(this); return false">
+<form method="post" id="{{ listing.listing_id() }}" onsubmit="return false;">
     {{ listing.view_form.hidden_tag() }}
     <div class="card">
         <div class="card-header">
@@ -20,21 +20,23 @@
 
                 <button type="button" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i>
                 </button>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-sm">
-                        <i class="far fa-trash-alt"></i>
-                    </button>
-                    <button type="button" class="btn btn-default btn-sm">
-                        <i class="fas fa-reply"></i>
-                    </button>
-                    <button type="button" class="btn btn-default btn-sm">
-                        <i class="fas fa-share"></i>
-                    </button>
+                <div class="btn-group" role="group">
+                    {% for a in listing._actions %}
+                        {% if listing[a].batch %}
+                            <button
+                                    data-info='{{ {'action':a, 'item_id':'batch' } | tojson }}'
+                                    onclick='Flaskly.submitListingAction("{{ listing.listing_id() }}", this);'
+                                    class="btn btn-default btn-sm"
+                            >{{ a }}</button>
+                        {% endif %}
+                    {% endfor %}
+
                 </div>
 
-                <button type="button" class="btn btn-default btn-sm">
+
+                <a type="button" class="btn btn-default btn-sm" href="">
                     <i class="fas fa-sync-alt"></i>
-                </button>
+                </a>
                 <div class="float-right">
                     {{ count_str }}
                     <div class="btn-group">
@@ -74,13 +76,11 @@
                             <td class="shrink-cell">
                                 <div class="btn-group" role="group">
                                     {% for a in listing._actions %}
-                                        <input
-                                                type="submit"
-                                                name="{{ a }}_{{ item[listing.id_field] }}"
-                                                id="{{ a }}_{{ item[listing.id_field] }}"
-                                                data-action="{{ a }}"
-                                                data-itemid="{{ item[listing.id_field] }}"
-                                                value="{{ a }}" class="btn btn-default btn-sm">
+                                        <button
+                                                data-info='{{ {'action':a, 'item_id':item[listing.id_field] } | tojson }}'
+                                                onclick='Flaskly.submitListingAction("{{ listing.listing_id() }}", this);'
+                                                class="btn btn-default btn-sm"
+                                        >{{ a }}</button>
                                     {% endfor %}
 
                                 </div>
