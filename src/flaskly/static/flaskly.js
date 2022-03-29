@@ -21,7 +21,11 @@ var Flaskly = {
     submitListingAction: async function (button) {
         // let frm = document.getElementById(frm_id);
         // let data = Flaskly.serializeForm(frm);
-        let frm = button.form;
+        var frm = button.form;
+        if (!frm) {
+            frm = button.closest("form");
+        }
+
         let frmData = new FormData(frm);
         let button_info = JSON.parse(button.dataset.info);
         var ids = Array();
@@ -44,7 +48,11 @@ var Flaskly = {
     },
 
     serializeForm: function (frm, doseq = true) {
-        formData = new FormData(frm);
+        return Flaskly.serializeFormData(new FormData(frm));
+
+    },
+
+    serializeFormData: function (formData, doseq = true) {
         var object = {};
         formData.forEach(function (value, key) {
             if (!(key in object && doseq)) {

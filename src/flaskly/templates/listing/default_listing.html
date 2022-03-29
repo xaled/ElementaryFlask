@@ -1,11 +1,10 @@
 {% macro action_button_group(item=None, batch=False) %}
     <div class="btn-group" role="group">
-        {% for a in listing._actions %}
-            {% set _action = listing[a] %}
-            {% if item or (batch and _action.batch) %}
+        {% for a, _action in listing._actions.items() %}
+            {% if not _action.hidden and (item or (batch and _action.batch)) %}
                 <button
                         data-info='{{ {'action':a, 'item_id':'batch' if batch else item[listing.id_field] } | tojson }}'
-                        onclick='Flaskly.submitListingAction(this);'
+                        onclick='Flaskly.submitListingAction(this); event.stopPropagation();' {# TODO: replace event #}
                         class="btn btn-default btn-sm"
                 >{{ _action.button_inner_html() }}</button>
             {% endif %}
@@ -69,10 +68,15 @@
                     </thead>
                     <tbody>
                     {% for item in items %}
-                        <tr>
+                        <tr
+                                data-info='{{ {'action': 'view', 'item_id': item[listing.id_field] } | tojson }}'
+                                onclick='Flaskly.submitListingAction(this);return false;'
+                        >
                             <td class="shrink-cell">
                                 <label>
-                                    <input type="checkbox" name="id" value="{{ item[listing.id_field] }}" class="mr-2">
+                                    <input type="checkbox" name="id" value="{{ item[listing.id_field] }}" class="mr-2"
+                                           onclick="event.stopPropagation();" {# TODO: replace event #}
+                                    >
                                 </label>
                             </td>
                             {% for f in listing._columns %}

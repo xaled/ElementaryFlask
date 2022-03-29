@@ -3,9 +3,9 @@ from urllib.parse import urlencode
 
 from flask import request
 from flask_wtf import FlaskForm
-from werkzeug.datastructures import ImmutableMultiDict, CombinedMultiDict
+from werkzeug.datastructures import ImmutableMultiDict, CombinedMultiDict, ImmutableDict
 
-from flaskly.components.form import error, FormResponse
+from flaskly.components.form import error, FormResponse, redirect
 from flaskly.globals import current_flaskly_app as _app
 from flaskly.typing import FormResponseReturn
 from .action import ListingAction
@@ -21,6 +21,8 @@ class AbstractListing(AbstractWeakComponent, ABC):
     id_field = None
     item_view_uri = None
     item_edit_uri = None
+    item_edit_title = None
+    item_edit_icon = None
     _actions = None
     _columns = None
     _init = False
@@ -96,7 +98,7 @@ class AbstractListing(AbstractWeakComponent, ABC):
     @classmethod
     def init_listing_cls(cls):
         if not cls._init:
-            actions = list()
+            actions = dict()
             columns = dict()
 
             if cls.columns is not None:
@@ -110,10 +112,22 @@ class AbstractListing(AbstractWeakComponent, ABC):
                 itm = getattr(cls, key)
                 # if getattr(itm, 'flaskly_listing_action', False) and callable(itm):
                 if isinstance(itm, ListingAction):
-                    actions.append(key)
+                    actions[itm.name] = itm
                 if isinstance(itm, ListingColumn):
                     columns[itm.name] = itm
-            cls._actions = tuple(actions)
+            # view action
+            if 'view' not in actions and cls.item_view_uri:
+                actions['view'] = ListingAction(lambda s, id_: redirect(cls.item_view_uri.format(id_)),
+                                                name='view', hidden=True)
+            # edit action
+            if 'edit' not in actions and cls.item_edit_uri:
+                actions['edit'] = ListingAction(lambda s, id_: redirect(cls.item_edit_uri.format(id_)),
+                                                name='edit',
+                                                icon=cls.item_edit_icon,
+                                                title=cls.item_edit_title,
+                                                )
+
+            cls._actions = ImmutableDict(actions)
 
             # columns = dict()
 
@@ -131,7 +145,7 @@ class AbstractListing(AbstractWeakComponent, ABC):
         if action_name is None or action_name not in self._actions:
             return error('Unknown action was sent!')
 
-        action = getattr(self, action_name)
+        action = self._actions.get(action_name)
         # action = action_func.flaskly_listing_action
 
         if not (action.batch or len(ids) == 1) or not (action.form_cls is None or formdata):
@@ -204,7 +218,7 @@ def _split_form_data(obj):
     obj = obj.copy()
     action = obj.pop('action', None)
     ids = obj.poplist("ids")
-    _app.logger.debug(repr(ids))
+    # _app.logger.debug(repr(ids))
     return ImmutableMultiDict(obj), action, ids
 
 
