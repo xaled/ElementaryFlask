@@ -54,7 +54,7 @@
                     <thead {{ listing.hidden_thead() }}>
                     <tr>
                         <th class="shrink-cell" scope="col"></th>
-                        {% for  f in listing._fields %}
+                        {% for  f in listing._columns %}
                             {{ f.th() | safe }}
                         {% endfor %}
                         <th class="shrink-cell" scope="col"></th>
@@ -68,13 +68,19 @@
                                     <input type="checkbox" name="id" value="{{ item[listing.id_field] }}" class="mr-2">
                                 </label>
                             </td>
-                            {% for f in listing._fields %}
+                            {% for f in listing._columns %}
                                 {{ f.td(item) | safe }}
                             {% endfor %}
                             <td class="shrink-cell">
                                 <div class="btn-group" role="group">
                                     {% for a in listing._actions %}
-                                        <input type="submit" value="{{ a }}" class="btn btn-default btn-sm">
+                                        <input
+                                                type="submit"
+                                                name="{{ a }}_{{ item[listing.id_field] }}"
+                                                id="{{ a }}_{{ item[listing.id_field] }}"
+                                                data-action="{{ a }}"
+                                                data-itemid="{{ item[listing.id_field] }}"
+                                                value="{{ a }}" class="btn btn-default btn-sm">
                                     {% endfor %}
 
                                 </div>

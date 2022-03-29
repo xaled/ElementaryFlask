@@ -6,9 +6,10 @@ from flask_wtf import FlaskForm
 from werkzeug.datastructures import ImmutableMultiDict, CombinedMultiDict
 
 from flaskly.components.form import error, FormResponse
+from flaskly.globals import current_flaskly_app as _app
 from flaskly.typing import FormResponseReturn
 from .action import ListingAction
-from .field import ListingField
+from .field import ListingColumn
 from .renderer import default_listing_render
 from ..weak_component import AbstractWeakComponent
 
@@ -16,12 +17,12 @@ SUBMIT_METHODS = ("POST", "PUT", "PATCH", "DELETE")
 
 
 class AbstractListing(AbstractWeakComponent, ABC):
-    fields = None
+    columns = None
     id_field = None
     item_view_uri = None
     item_edit_uri = None
     _actions = None
-    _fields = None
+    _columns = None
     _init = False
     default_renderer = default_listing_render
     show_header = True
@@ -38,11 +39,14 @@ class AbstractListing(AbstractWeakComponent, ABC):
             return self
         if _is_submitted():
             # TODO: validate on submit
+
             form_response = self.on_submit()
 
             if not isinstance(form_response, FormResponse):
                 form_response = FormResponse(form_response)
 
+            _app.logger.debug('Listing %s action submit data: %s, response: %s',
+                              self.__class__.__name__, request.form, form_response)
             return form_response
         return False
 
@@ -93,27 +97,27 @@ class AbstractListing(AbstractWeakComponent, ABC):
     def init_listing_cls(cls):
         if not cls._init:
             actions = list()
-            fields = dict()
+            columns = dict()
 
-            if cls.fields is not None:
-                for field_or_field_name in cls.fields:
-                    if isinstance(field_or_field_name, ListingField):
-                        fields[field_or_field_name.field_name] = field_or_field_name
+            if cls.columns is not None:
+                for column_or_name in cls.columns:
+                    if isinstance(column_or_name, ListingColumn):
+                        columns[column_or_name.name] = column_or_name
                     else:
-                        fields[field_or_field_name] = ListingField(field_or_field_name)
+                        columns[column_or_name] = ListingColumn(column_or_name)
 
             for key in dir(cls):
                 itm = getattr(cls, key)
                 # if getattr(itm, 'flaskly_listing_action', False) and callable(itm):
                 if isinstance(itm, ListingAction):
                     actions.append(key)
-                if isinstance(itm, ListingField):
-                    fields[itm.field_name] = itm
+                if isinstance(itm, ListingColumn):
+                    columns[itm.name] = itm
             cls._actions = tuple(actions)
 
-            # fields = dict()
+            # columns = dict()
 
-            cls._fields = tuple(sorted(fields.values(), key=lambda x: x.order))
+            cls._columns = tuple(sorted(columns.values(), key=lambda x: x.order))
             cls._init = True
 
     def on_submit(self) -> FormResponseReturn:

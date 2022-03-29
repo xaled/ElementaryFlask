@@ -1,5 +1,11 @@
 var Flaskly = {
     submitForm: async function (frm) {
+        formData = new FormData(frm);
+        var object = {};
+        formData.forEach(function (value, key) {
+            object[key] = value;
+        });
+        console.log(object);
         fetch(frm.action, {
             method: 'POST',
             body: new FormData(frm),
