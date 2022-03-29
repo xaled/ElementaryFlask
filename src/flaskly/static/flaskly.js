@@ -101,7 +101,8 @@ var Flaskly = {
     },
 
     redirect: function (dst) {
-        window.location.replace(dst);
+        // window.location.replace(dst);
+        window.location.href = dst;
     },
 
     replaceElement: function (el, new_content) {
