@@ -18,9 +18,10 @@ var Flaskly = {
         Flaskly.privateSubmitForm(frm, frm.action, new FormData(frm))
     },
 
-    submitListingAction: async function (frm_id, button) {
-        let frm = document.getElementById(frm_id);
+    submitListingAction: async function (button) {
+        // let frm = document.getElementById(frm_id);
         // let data = Flaskly.serializeForm(frm);
+        let frm = button.form;
         let frmData = new FormData(frm);
         let button_info = JSON.parse(button.dataset.info);
         var ids = Array();
