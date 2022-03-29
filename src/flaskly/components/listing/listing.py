@@ -60,10 +60,11 @@ class AbstractListing(AbstractWeakComponent, ABC):
                 p = mp
             return p
 
-        def _page_uri(p, f):
+        def _page_uri(p, f, q):
             t = (("page", p),)
-            if f:
-                t += (('filters', f),)
+            for k, v in (('filters', f), ('query', q)):
+                if v:
+                    t += ((k, v),)
             return '?' + urlencode(t)
 
         try:
@@ -71,25 +72,26 @@ class AbstractListing(AbstractWeakComponent, ABC):
         except:
             page = 1
         items_per_page = self.items_per_page
-        filters = request.args.get('filters', None)
-        c_total = self.count_items(filters=filters)
+        filters = request.args.get('filters', None) or None
+        query = request.args.get('query', None) or None
+        c_total = self.count_items(filters=filters, query=query)
         max_page = (c_total // items_per_page) + (1 if c_total % items_per_page else 0)
         page = _correct_page(page, max_page)
 
         c_f = (page - 1) * items_per_page + 1
         c_t = min(page * items_per_page, c_total)
-        next_page = _page_uri(_correct_page(page + 1, max_page), filters)
-        previous_page = _page_uri(_correct_page(page - 1, max_page), filters)
+        next_page = _page_uri(_correct_page(page + 1, max_page), filters, query)
+        previous_page = _page_uri(_correct_page(page - 1, max_page), filters, query)
         count_str = f"{c_f}-{c_t}/{c_total}"
         return self.list_items(
-            page=page, items_per_page=items_per_page, filters=filters), count_str, next_page, previous_page
+            page=page, items_per_page=items_per_page, filters=filters, query=query), count_str, next_page, previous_page
 
     @abstractmethod
-    def list_items(self, page=1, items_per_page=20, filters=None):
+    def list_items(self, page=1, items_per_page=20, filters=None, query=None):
         raise NotImplementedError()
 
     @abstractmethod
-    def count_items(self, filters=None):
+    def count_items(self, filters=None, query=None):
         raise NotImplementedError()
 
     def __len__(self):

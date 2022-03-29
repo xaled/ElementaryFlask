@@ -13,23 +13,28 @@
     </div>
 {% endmacro %}
 
-<form method="post" id="{{ listing.listing_id() }}" onsubmit="return false;">
-    {{ listing.view_form.hidden_tag() }}
-    <div class="card">
-        <div class="card-header">
-            <div class="card-tools">
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-tools">
+            <form method="get">
                 <div class="input-group input-group-sm">
-                    <input type="text" class="form-control" placeholder="Search">
+                    <input name="query" type="text" class="form-control"
+                           value="{{ request.args.get('query', '') }}"
+                           placeholder="Search">
+                    <input name="filters" type="hidden" value="{{ request.args.get('filters', '') }}">
                     <div class="input-group-append">
-                        <div class="btn btn-primary">
+                        <button class="btn btn-primary">
                             <i class="fas fa-search"></i>
-                        </div>
+                        </button>
                     </div>
                 </div>
-            </div>
-
+            </form>
         </div>
 
+    </div>
+    <form method="post" id="{{ listing.listing_id() }}" onsubmit="return false;">
+        {{ listing.view_form.hidden_tag() }}
         <div class="card-body p-0">
             <div class="mailbox-controls">
 
@@ -91,5 +96,6 @@
                 </table>
             </div>
         </div>
-    </div>
-</form>
+    </form>
+
+</div>
