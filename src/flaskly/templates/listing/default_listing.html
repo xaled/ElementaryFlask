@@ -13,24 +13,66 @@
     </div>
 {% endmacro %}
 
+{% macro filter_button_group(filter) %}
+    {% set choices = filter(listing, items) %}
+    {% set button_type = "btn-primary" if filter.active() else "btn-outline btn-outline-primary" %}
+
+    {% if choices %}
+
+        <div class="btn-group">
+            {% if filter.toggle %}
+                <a type="button" class="btn btn-sm btn-block {{ button_type }}"
+                   href="{{ filter.choice_link("true") }}"
+                >
+                    {{ filter.title }}&nbsp;
+                </a>
+            {% else %}
+                <button type="button" class="btn btn-sm btn-block {{ button_type }} dropdown-toggle dropdown-icon "
+                        data-toggle="dropdown"
+                        aria-expanded="false">
+                    {{ filter.title }}&nbsp;
+                </button>
+                <div class="dropdown-menu" role="menu" style="">
+
+                    {% for key, value in choices %}
+                        {% set item_active = "active" if filter.active(key) else "" %}
+                        <a class="dropdown-item {{ item_active }}" href="{{ filter.choice_link(key) }}"
+                           data-key="{{ key }}">{{ value }}</a>
+                    {% endfor %}
+                    {#            <div class="dropdown-divider"></div>#}
+                    {#            <a class="dropdown-item" href="#">Separated link</a>#}
+                </div>
+            {% endif %}
+
+        </div>
+    {% endif %}
+{% endmacro %}
+
 
 <div class="card">
     <div class="card-header">
-        <div class="card-tools">
-            <form method="get">
-                <div class="input-group input-group-sm">
-                    <input name="query" type="text" class="form-control"
-                           value="{{ request.args.get('query', '') }}"
-                           placeholder="Search">
-                    <input name="filters" type="hidden" value="{{ request.args.get('filters', '') }}">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary">
-                            <i class="fas fa-search"></i>
-                        </button>
+        <div class="flaskly-filters">
+            {% for filter in listing._filters %}
+                {{ filter_button_group(filter) }}
+            {% endfor %}
+            <div class="float-right">
+                <form method="get">
+                    <div class="input-group input-group-sm">
+                        <input name="query" type="text" class="form-control"
+                               value="{{ request.args.get('query', '') }}"
+                               placeholder="Search">
+                        <input name="filters" type="hidden" value="{{ request.args.get('filters', '') }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
+
         </div>
+
 
     </div>
     <form method="post" id="{{ listing.listing_id() }}" onsubmit="return false;">

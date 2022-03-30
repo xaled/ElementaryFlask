@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from urllib.parse import urlencode
 
 from flask import request
 from flask_wtf import FlaskForm
@@ -8,8 +7,10 @@ from werkzeug.datastructures import ImmutableMultiDict, CombinedMultiDict, Immut
 from flaskly.components.form import error, FormResponse, redirect
 from flaskly.globals import current_flaskly_app as _app
 from flaskly.typing import FormResponseReturn
+from ._page_uri import page_uri
 from .action import ListingAction
 from .field import ListingColumn
+from .filter import ListingFilter, get_parsed_filters
 from .renderer import default_listing_render
 from ..weak_component import AbstractWeakComponent
 
@@ -25,6 +26,7 @@ class AbstractListing(AbstractWeakComponent, ABC):
     item_edit_icon = None
     _actions = None
     _columns = None
+    _filters = None
     _init = False
     default_renderer = default_listing_render
     show_header = True
@@ -60,13 +62,6 @@ class AbstractListing(AbstractWeakComponent, ABC):
                 p = mp
             return p
 
-        def _page_uri(p, f, q):
-            t = (("page", p),)
-            for k, v in (('filters', f), ('query', q)):
-                if v:
-                    t += ((k, v),)
-            return '?' + urlencode(t)
-
         try:
             page = request.args.get('page', 1, type=int)
         except:
@@ -74,17 +69,21 @@ class AbstractListing(AbstractWeakComponent, ABC):
         items_per_page = self.items_per_page
         filters = request.args.get('filters', None) or None
         query = request.args.get('query', None) or None
-        c_total = self.count_items(filters=filters, query=query)
+        c_total = self.count_items(filters=get_parsed_filters(), query=query)
         max_page = (c_total // items_per_page) + (1 if c_total % items_per_page else 0)
         page = _correct_page(page, max_page)
+        if c_total > 0:
+            c_f = (page - 1) * items_per_page + 1
+            c_t = min(page * items_per_page, c_total)
+            count_str = f"{c_f}-{c_t}/{c_total}"
+        else:
+            count_str = ""
 
-        c_f = (page - 1) * items_per_page + 1
-        c_t = min(page * items_per_page, c_total)
-        next_page = _page_uri(_correct_page(page + 1, max_page), filters, query)
-        previous_page = _page_uri(_correct_page(page - 1, max_page), filters, query)
-        count_str = f"{c_f}-{c_t}/{c_total}"
+        next_page = page_uri(page=_correct_page(page + 1, max_page), filters=filters, query=query)
+        previous_page = page_uri(page=_correct_page(page - 1, max_page), filters=filters, query=query)
         return self.list_items(
-            page=page, items_per_page=items_per_page, filters=filters, query=query), count_str, next_page, previous_page
+            page=page, items_per_page=items_per_page, filters=get_parsed_filters(),
+            query=query), count_str, next_page, previous_page
 
     @abstractmethod
     def list_items(self, page=1, items_per_page=20, filters=None, query=None):
@@ -102,6 +101,7 @@ class AbstractListing(AbstractWeakComponent, ABC):
         if not cls._init:
             actions = dict()
             columns = dict()
+            filters = list()
 
             if cls.columns is not None:
                 for column_or_name in cls.columns:
@@ -115,8 +115,10 @@ class AbstractListing(AbstractWeakComponent, ABC):
                 # if getattr(itm, 'flaskly_listing_action', False) and callable(itm):
                 if isinstance(itm, ListingAction):
                     actions[itm.name] = itm
-                if isinstance(itm, ListingColumn):
+                elif isinstance(itm, ListingColumn):
                     columns[itm.name] = itm
+                elif isinstance(itm, ListingFilter):
+                    filters.append(itm)
             # view action
             if 'view' not in actions and cls.item_view_uri:
                 actions['view'] = ListingAction(lambda s, id_: redirect(cls.item_view_uri.format(id_)),
@@ -130,6 +132,9 @@ class AbstractListing(AbstractWeakComponent, ABC):
                                                 )
 
             cls._actions = ImmutableDict(actions)
+            filters.sort(key=lambda x: x.order)
+            cls._filters = filters
+            # cls._filters = ImmutableDict({f.name: f for f in filters})
 
             # columns = dict()
 
