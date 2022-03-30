@@ -49,7 +49,9 @@ var Flaskly = {
             ids.push(button_info.item_id);
         }
         // frmData = FormData();
-        frmData.append("ids", ids);
+        for (const id_ of ids) {
+            frmData.append("ids", id_);
+        }
         frmData.append("action", button_info.action);
         frmData.delete("id");
         return Flaskly.privateSubmitForm(null, "", frmData);
@@ -93,6 +95,9 @@ var Flaskly = {
                 case 'redirect':
                     Flaskly.redirect(formAction.params.destination);
                     break;
+                case 'refresh':
+                    Flaskly.refresh_page();
+                    break;
                 case 'replace':
                     if (frm == null) {
                         console.error("Stateless element is not set!");
@@ -121,6 +126,11 @@ var Flaskly = {
     redirect: function (dst) {
         // window.location.replace(dst);
         window.location.href = dst;
+    },
+
+    refresh_page: function () {
+        // window.location.replace(dst);
+        window.location.reload();
     },
 
     replaceElement: function (el, new_content) {

@@ -59,3 +59,7 @@ def update_form(form):
 
 def error(error_msg):
     return toast(error_msg, message_type='error', message_title='Error')
+
+
+def refresh():
+    return FormAction('refresh')
