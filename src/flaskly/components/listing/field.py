@@ -27,7 +27,7 @@ class ListingColumn:
 
         if self._td_class is None:
             _td_class = ((self.td_class or "") + " shrink-cell" if self.shrink_cell else "").strip()
-            self._td_class = f'class="{_td_class}"' if _td_class else ""
+            self._td_class = f'class="{_td_class} align-middle"' if _td_class else 'class="align-middle"'
 
         return f"""<td {self._td_class}>{val}</td>"""
 

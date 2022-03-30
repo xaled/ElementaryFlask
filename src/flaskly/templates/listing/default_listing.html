@@ -4,8 +4,9 @@
             {% if not _action.hidden and (item or (batch and _action.batch)) %}
                 <button
                         data-info='{{ {'action':a, 'item_id':'batch' if batch else item[listing.id_field] } | tojson }}'
-                        onclick='Flaskly.submitListingAction(this); event.stopPropagation();' {# TODO: replace event #}
-                        class="btn btn-default btn-sm"
+                        onclick='Flaskly.submitListingAction(this, "{{ listing.listing_id() }}"); event.stopPropagation();'
+                        {# TODO: replace event #}
+                        class="btn btn-outline btn-outline-primary"
                 >{{ _action.button_inner_html() }}</button>
             {% endif %}
         {% endfor %}
@@ -21,13 +22,13 @@
 
         <div class="btn-group">
             {% if filter.toggle %}
-                <a type="button" class="btn btn-sm btn-block {{ button_type }}"
+                <a type="button" class="btn btn-block {{ button_type }}"
                    href="{{ filter.choice_link("true") }}"
                 >
                     {{ filter.title }}&nbsp;
                 </a>
             {% else %}
-                <button type="button" class="btn btn-sm btn-block {{ button_type }} dropdown-toggle dropdown-icon "
+                <button type="button" class="btn btn-block {{ button_type }} dropdown-toggle dropdown-icon "
                         data-toggle="dropdown"
                         aria-expanded="false">
                     {{ filter.title }}&nbsp;
@@ -50,20 +51,37 @@
 
 
 <div class="card">
-    <div class="card-header">
-        <div class="flaskly-filters">
-            {% for filter in listing._filters %}
-                {{ filter_button_group(filter) }}
-            {% endfor %}
-            <div class="float-right">
+
+    <div class="card-body">
+        <div class="row">
+            <div class="col-auto">
+                <button type="button" class="btn btn-outline btn-outline-primary checkbox-toggle"><i
+                        class="far fa-square"></i>
+                </button>
+
+                {{ action_button_group(batch=True) }}
+
+                <a type="button" class="btn btn-outline btn-outline-primary" href="">
+                    <i class="fas fa-sync-alt"></i>
+                </a>
+            </div>
+            <div class="col-auto">
+                <div class="pr-3">
+                    {% for filter in listing._filters %}
+                        {{ filter_button_group(filter) }}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col">
                 <form method="get">
-                    <div class="input-group input-group-sm">
+                    <div class="input-group">
                         <input name="query" type="text" class="form-control"
                                value="{{ request.args.get('query', '') }}"
                                placeholder="Search">
                         <input name="filters" type="hidden" value="{{ request.args.get('filters', '') }}">
                         <div class="input-group-append">
-                            <button class="btn btn-primary">
+                            <button class="btn btn-outline-primary btn-outline">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -71,39 +89,26 @@
                 </form>
             </div>
 
-        </div>
 
-
-    </div>
-    <form method="post" id="{{ listing.listing_id() }}" onsubmit="return false;">
-        {{ listing.view_form.hidden_tag() }}
-        <div class="card-body p-0">
-            <div class="mailbox-controls">
-
-                <button type="button" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i>
-                </button>
-
-                {{ action_button_group(batch=True) }}
-
-                <a type="button" class="btn btn-default btn-sm" href="">
-                    <i class="fas fa-sync-alt"></i>
-                </a>
-                <div class="float-right">
+            <div class="col-auto">
+                <div class="float-right pl-3">
                     {{ count_str }}
                     <div class="btn-group">
-                        <a type="button" class="btn btn-default btn-sm" href="{{ previous_page }}">
+                        <a type="button" class="btn btn-outline-primary btn-outline" href="{{ previous_page }}">
                             <i class="fas fa-chevron-left"></i>
                         </a>
-                        <a type="button" class="btn btn-default btn-sm" href="{{ next_page }}">
+                        <a type="button" class="btn btn-outline-primary btn-outline" href="{{ next_page }}">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     </div>
 
                 </div>
-
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover table-sm ">
+        </div>
+        <form method="post" id="{{ listing.listing_id() }}" onsubmit="return false;">
+            {{ listing.view_form.hidden_tag() }}
+            <div class="table-responsive mt-5">
+                <table class="table table-hover">
                     <thead {{ listing.hidden_thead() }}>
                     <tr>
                         <th class="shrink-cell" scope="col"></th>
@@ -116,11 +121,13 @@
                     <tbody>
                     {% for item in items %}
                         <tr
+
                                 data-info='{{ {'action': 'view', 'item_id': item[listing.id_field] } | tojson }}'
                                 onclick='Flaskly.submitListingAction(this);return false;'
                         >
-                            <td class="shrink-cell">
-                                <label>
+                            <td class="shrink-cell align-middle"
+                                onclick="Flaskly.listingCheckboxClick(this); event.stopPropagation();">
+                                <label class="m-0">
                                     <input type="checkbox" name="id" value="{{ item[listing.id_field] }}" class="mr-2"
                                            onclick="event.stopPropagation();" {# TODO: replace event #}
                                     >
@@ -129,7 +136,7 @@
                             {% for f in listing._columns %}
                                 {{ f.td(item) | safe }}
                             {% endfor %}
-                            <td class="shrink-cell">
+                            <td class="shrink-cell align-middle">
                                 {{ action_button_group(item=item) }}
                             </td>
                         </tr>
@@ -137,7 +144,7 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 
 </div>

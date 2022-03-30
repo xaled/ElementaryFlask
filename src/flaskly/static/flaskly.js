@@ -18,12 +18,21 @@ var Flaskly = {
         Flaskly.privateSubmitForm(frm, frm.action, new FormData(frm))
     },
 
-    submitListingAction: async function (button) {
+    listingCheckboxClick: function (el) {
+        el.querySelector("input[type=checkbox]").click();
+    },
+
+    submitListingAction: async function (button, frm_id = null) {
         // let frm = document.getElementById(frm_id);
         // let data = Flaskly.serializeForm(frm);
         var frm = button.form;
+
         if (!frm) {
-            frm = button.closest("form");
+            if (frm_id) {
+                frm = document.getElementById(frm_id);
+            } else {
+                frm = button.closest("form");
+            }
         }
 
         let frmData = new FormData(frm);
