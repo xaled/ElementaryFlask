@@ -1,4 +1,4 @@
-var Flaskly = {
+let Flaskly = {
     privateSubmitForm: function (frm, action, body) {
         fetch(action, {
             method: 'POST',
@@ -25,7 +25,7 @@ var Flaskly = {
     submitListingAction: async function (button, frm_id = null) {
         // let frm = document.getElementById(frm_id);
         // let data = Flaskly.serializeForm(frm);
-        var frm = button.form;
+        let frm = button.form;
 
         if (!frm) {
             if (frm_id) {
@@ -37,7 +37,7 @@ var Flaskly = {
 
         let frmData = new FormData(frm);
         let button_info = JSON.parse(button.dataset.info);
-        var ids = Array();
+        let ids = Array();
 
         if (button_info.item_id === 'batch') {
             if (!frmData.has('id')) {
@@ -64,7 +64,7 @@ var Flaskly = {
     },
 
     serializeFormData: function (formData, doseq = true) {
-        var object = {};
+        let object = {};
         formData.forEach(function (value, key) {
             if (!(key in object && doseq)) {
                 object[key] = value;
@@ -209,5 +209,130 @@ var Flaskly = {
 
 
         };
+    },
+
+    initListingCheckboxes: function (parent = null) {
+        let lastChecked = null;
+        if (!parent) {
+            parent = document;
+        }
+
+        const chkboxes = Array.from(parent.querySelectorAll('.fl-checkbox'));
+        const links = Array.from(parent.querySelectorAll('.fl-select-link'));
+        const batch_buttons = parent.querySelector('.fl-batch-buttons');
+        const select_all_button = links[0];
+        const select_all_checkbox = select_all_button.querySelector('input');
+        // const select_all_checkbox = links[0];
+
+
+        const is_checked = (el) => el.checked;
+        const update_batch_buttons_visibility = (show) => {
+            if (batch_buttons) {
+                if (show) {
+                    batch_buttons.classList.remove("d-none");
+                } else {
+                    batch_buttons.classList.add("d-none");
+                }
+            }
+        };
+
+        const update_select_all_checkbox = (state) => {
+            if (select_all_checkbox) {
+                switch (state) {
+                    case 'all':
+                        select_all_checkbox.checked = true;
+                        select_all_checkbox.indeterminate = false;
+                        // select_all_checkbox.innerHTML = '☐';
+                        break;
+                    case 'some':
+                        select_all_checkbox.checked = false;
+                        select_all_checkbox.indeterminate = true;
+                        // select_all_checkbox.innerHTML = '☑';
+                        break;
+                    default:
+                        select_all_checkbox.checked = false;
+                        select_all_checkbox.indeterminate = false;
+                    // select_all_checkbox.innerHTML = '';
+
+                }
+            }
+        };
+
+
+        const update_on_change = () => {
+            let checked = chkboxes.filter(is_checked);
+            if (checked.length === chkboxes.length) { // all
+                update_batch_buttons_visibility(true);
+                update_select_all_checkbox('all');
+            } else if (checked.length > 0) { // some
+                update_batch_buttons_visibility(true);
+                update_select_all_checkbox('some');
+            } else { // none
+                update_batch_buttons_visibility(false);
+                update_select_all_checkbox('none');
+            }
+
+        };
+
+        chkboxes.forEach(item => {
+            item.addEventListener('click', event => {
+                let currentChecked = event.target;
+
+                if (lastChecked) {
+                    if (event.shiftKey) {
+                        let start = chkboxes.indexOf(currentChecked);
+                        let end = chkboxes.indexOf(lastChecked);
+
+
+                        chkboxes.slice(Math.min(start, end), Math.max(start, end) + 1).forEach(item => {
+                            item.checked = lastChecked.checked;
+                        });
+                    }
+                }
+
+                lastChecked = currentChecked;
+                update_on_change();
+                event.stopPropagation();
+            })
+        });
+
+        links.forEach(item => {
+            item.addEventListener('click', event => {
+                let select_type = event.target.dataset.select;
+                lastChecked = null;
+                let default_state = !chkboxes.every(is_checked);
+
+                chkboxes.forEach(item => {
+                    switch (select_type) {
+                        case 'all':
+                            item.checked = true;
+                            break;
+                        case 'none':
+                            item.checked = false;
+                            break;
+                        case 'reverse':
+                            item.checked = !item.checked;
+                            break;
+                        default:
+                            item.checked = default_state;
+
+                    }
+
+                });
+
+                update_on_change();
+                event.stopPropagation();
+
+            })
+        });
+
+        // select_all_checkbox.addEventListener('click', event => {
+        //     console.log('test');
+        //     select_all_button.click();
+        //     event.stopPropagation();
+        // })
+
+        update_on_change();
+
     }
 };

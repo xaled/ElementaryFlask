@@ -1,5 +1,5 @@
-{% macro action_button_group(item=None, batch=False) %}
-    <div class="btn-group" role="group">
+{% macro action_button_group(item=None, batch=False, group_cls="") %}
+    <div class="btn-group {{ group_cls }}" role="group">
         {% for a, _action in listing._actions.items() %}
             {% if not _action.hidden and (item or (batch and _action.batch)) %}
                 <button
@@ -50,16 +50,28 @@
 {% endmacro %}
 
 
-<div class="card">
+<div class="card" id="{{ listing.listing_id() }}-component">
 
     <div class="card-body">
         <div class="row">
             <div class="col-auto">
-                <button type="button" class="btn btn-outline btn-outline-primary checkbox-toggle"><i
-                        class="far fa-square"></i>
-                </button>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline btn-outline-primary fl-select-link"
+                            data-select="checkbox">
+                        <input type="checkbox" disabled>
+                    </button>
+                    <button type="button" class="btn btn-outline btn-outline-primary dropdown-toggle dropdown-icon"
+                            data-toggle="dropdown">
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <div class="dropdown-menu" role="menu">
+                        <a class="dropdown-item fl-select-link" data-select="all" href="#">All</a>
+                        <a class="dropdown-item fl-select-link" data-select="none" href="#">None</a>
+                        <a class="dropdown-item fl-select-link" data-select="reverse" href="#">Reverse</a>
+                    </div>
+                </div>
 
-                {{ action_button_group(batch=True) }}
+                {{ action_button_group(batch=True, group_cls="fl-batch-buttons d-none") }}
 
                 <a type="button" class="btn btn-outline btn-outline-primary" href="">
                     <i class="fas fa-sync-alt"></i>
@@ -127,11 +139,10 @@
                         >
                             <td class="shrink-cell align-middle"
                                 onclick="Flaskly.listingCheckboxClick(this); event.stopPropagation();">
-                                <label class="m-0">
-                                    <input type="checkbox" name="id" value="{{ item[listing.id_field] }}" class="mr-2"
-                                           onclick="event.stopPropagation();" {# TODO: replace event #}
-                                    >
-                                </label>
+                                <input type="checkbox" name="id" value="{{ item[listing.id_field] }}"
+                                       class="mr-2 fl-checkbox"
+                                       onclick="event.stopPropagation();" {# TODO: replace event #}
+                                >
                             </td>
                             {% for f in listing._columns %}
                                 {{ f.td(item) | safe }}
@@ -146,5 +157,12 @@
             </div>
         </form>
     </div>
+    <script>
+        window.addEventListener("load", (event) => {
+            Flaskly.initListingCheckboxes(document.getElementById("{{ listing.listing_id() }}-component"));
+        }, false);
+
+
+    </script>
 
 </div>

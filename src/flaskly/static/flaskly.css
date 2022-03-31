@@ -24,3 +24,7 @@ td.shrink-cell {
     width: 1%;
     white-space: nowrap;
 }
+
+input[disabled] {
+    pointer-events: none
+}
