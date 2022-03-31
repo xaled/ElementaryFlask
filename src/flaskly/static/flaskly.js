@@ -261,7 +261,7 @@ let Flaskly = {
 
         const update_on_change = () => {
             let checked = chkboxes.filter(is_checked);
-            if (checked.length === chkboxes.length) { // all
+            if (checked.length === chkboxes.length && checked.length) { // all
                 update_batch_buttons_visibility(true);
                 update_select_all_checkbox('all');
             } else if (checked.length > 0) { // some
