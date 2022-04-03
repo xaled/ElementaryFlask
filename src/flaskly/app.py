@@ -11,6 +11,7 @@ from .components import PageResponse, PageErrorResponse, FavIcon, make_page_resp
     RenderResponse
 from .components.form import wrap_form_cls, form_endpoint_func, default_form_render, FormResponse
 from .components.navigation import AbstractNavigationProvider, StaticNavigationProvider, Navigation, NavigationLink
+from .cron import cron_endpoint, CronEntry
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
 
@@ -27,6 +28,7 @@ class FlasklyApp:
                  alpinejs_dependency=None,
                  logo_src=None,
                  renderers=None,
+                 crontab: t.Iterable[CronEntry] = None,
                  **options):
         # from .auth import LogoutSessionInterface
 
@@ -131,6 +133,13 @@ class FlasklyApp:
 
         # Default Template filters
         # self.flask_app.add_template_filter()
+
+        # Crontab & cron endpoint rule
+        self.crontab = list()  # Default crons
+        if crontab:
+            self.crontab.extend(crontab)
+
+        self.core_bp.add_url_rule('/cron', 'cron', cron_endpoint)
 
     def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
         # Registering Blueprints
@@ -334,6 +343,14 @@ class FlasklyApp:
         wrapper = self._page_view_functions[endpoint][1]
 
         bp.add_url_rule(rule, endpoint, wrapper, **add_url_options)
+
+    def cron(self, expr_format: str, /, *, name: str = None, hash_id=None, args=None, kwargs=None):
+        def decorator(f):
+            n = name or f.__name__
+            self.crontab.append(CronEntry(n, expr_format, task=f, hash_id=hash_id, args=args, kwargs=kwargs))
+            return f
+
+        return decorator
 
 
 DEFAULT_RENDERERS = {

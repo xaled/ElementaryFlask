@@ -53,3 +53,4 @@ RendererMapping = Dict[type, AbstractRenderer]
 Renderer = Union[AbstractRenderer, Callable]
 AbstractIcon = "AbstractIcon"
 AbstractListing = "AbstractListing"
+CronEntry = "CronEntry"
