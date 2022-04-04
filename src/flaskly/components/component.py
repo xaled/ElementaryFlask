@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections import Iterable
+from collections.abc import Iterable
 
 from flaskly.typing import RenderReturnValue, Block
 from .render_response import RenderResponse, RenderError

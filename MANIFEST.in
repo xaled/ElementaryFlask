@@ -1,0 +1,2 @@
+recursive-include src/flaskly/templates *
+recursive-include src/flaskly/static *

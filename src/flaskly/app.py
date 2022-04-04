@@ -149,6 +149,11 @@ class FlasklyApp:
 
         # TODO register error handlers
 
+        # logging level
+        if debug:
+            import logging
+            self.logger.setLevel(logging.DEBUG)
+
         # Run flask app
         self.flask_app.run(host=host, port=port, debug=debug, load_dotenv=load_dotenv, **kwargs)
 
