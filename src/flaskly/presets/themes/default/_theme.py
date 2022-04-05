@@ -1,5 +1,5 @@
-from flaskly.components.page_layout import LayoutMapping, EmptyPageLayout
-from flaskly.components.theme import Theme
+from flaskly.components import LayoutMapping, EmptyPageLayout
+from flaskly.components import Theme
 from flaskly.includes import DEFAULT_BOOTSTRAP_VERSION, make_bootstrap_dependency
 from .layouts import TopNavigationLayout
 

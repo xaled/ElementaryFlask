@@ -1,11 +1,8 @@
 # from .page import ComponentIncludes, AbstractComponent, Page, AbstractContainer, PageResponse
-from .component import AbstractComponent, Renderable, render
-from .container import AbstractContainer, NormalContainer
-from .favicon import FavIcon
-from .http_error import HTTPError
-from .icon import AbstractIcon, HTMLIcon, IClassIcon
-from .page_layout import AbstractPageLayout, EmptyPageLayout
-from .page_response import make_page_response, PageResponse, PageErrorResponse
-from .render_response import RenderError, RenderResponse, RenderException
-from .theme import Theme, LayoutMapping
-from .weak_component import AbstractWeakComponent, AbstractRenderer
+from ._component import *
+from .general import *
+from .page import *
+# from .bootstrap import *
+from .weak import *
+
+__all__  = _component.__all__ + general.__all__  + weak.__all__ + page.__all__

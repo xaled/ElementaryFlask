@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from flaskly.components.page_layout import EmptyPageLayout
+from flaskly.components import EmptyPageLayout
 
 
 class AbstractSitePageLayout(EmptyPageLayout):

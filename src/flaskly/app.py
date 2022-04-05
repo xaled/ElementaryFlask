@@ -10,8 +10,8 @@ from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import PageResponse, PageErrorResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
     EmptyPageLayout, IClassIcon, AbstractIcon, \
     RenderResponse
-from .components.form import wrap_form_cls, form_endpoint_func, default_form_render, FormResponse
-from .components.navigation import AbstractNavigationProvider, StaticNavigationProvider, Navigation, NavigationLink
+from .components.weak.form import wrap_form_cls, form_endpoint_func, default_form_render, FormResponse
+from .components.weak.navigation import AbstractNavigationProvider, StaticNavigationProvider, Navigation, NavigationLink
 from .cron import cron_endpoint, CronEntry
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
