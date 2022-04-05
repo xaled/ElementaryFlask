@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 
-from flaskly.cron import CronEntry, cron_endpoint
+from elementary_flask.cron import CronEntry, cron_endpoint
 
 
 def hello_world(ix):

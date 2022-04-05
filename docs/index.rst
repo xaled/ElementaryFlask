@@ -1,9 +1,9 @@
-.. Flaskly documentation master file, created by
+.. Elementary-Flask documentation master file, created by
    sphinx-quickstart on Sun Feb 27 19:27:08 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Flaskly
+Elementary-Flask
 ===================================
 Component based UI framework for Flask/Python.
 Todo: Elaborate

@@ -14,21 +14,21 @@ if __name__ == '__main__':
 
     data_files = []
     for dn in ('templates', 'static'):
-        for root, dirs, files in os.walk(os.path.join('src/flaskly', dn)):
+        for root, dirs, files in os.walk(os.path.join('src/elementary_flask', dn)):
             for fn in files:
                 data_files.append(os.path.join(root, fn))
 
     setuptools.setup(
-        name="flaskly",
+        name="elementary_flask",
         version=VERSION,
         author="Khalid Grandi",
         author_email="kh.grandi@gmail.com",
         description="Component based framework for Flask/Python",
         long_description=long_description,
         long_description_content_type="text/markdown",
-        url="https://github.com/xaled/flaskly",
+        url="https://github.com/xaled/elementary_flask",
         project_urls={
-            "Bug Tracker": "https://github.com/xaled/flaskly/issues",
+            "Bug Tracker": "https://github.com/xaled/elementary_flask/issues",
         },
         classifiers=[
             "Programming Language :: Python :: 3",

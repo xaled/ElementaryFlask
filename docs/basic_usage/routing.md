@@ -15,7 +15,7 @@ def hello_world(name=None):
 You can also return a [Renderable](Renderable) object instead of a string:
 
 ```python
-from flaskly.components import AbstractComponent
+from elementary_flask.components import AbstractComponent
 
 
 class HelloWorldComponent(AbstractComponent)
@@ -49,7 +49,7 @@ def hello_world():
 ```
 
 ## Page Layout
-By default Flaskly renders the result using `'default'` {doc}`page_layout`.
+By default Elementary-Flask renders the result using `'default'` {doc}`page_layout`.
 You can change the page_layout to a builtin or a custom using the `page_layout` argument.
 
 ```python
