@@ -2,7 +2,8 @@ import re
 from types import SimpleNamespace
 
 import flask as _f
-from flask_wtf.csrf import CSRFProtect as _CSRFProtect
+import yaml
+from redis import Redis
 
 import flaskly.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
@@ -37,13 +38,15 @@ class FlasklyApp:
         # TEMPLATE_DIR = os.path.join(MODULE_DIR, 'template')
         # STATIC_DIR = os.path.join(MODULE_DIR, 'static')
         # app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
+        self._init = False
         self.name = name
         self.flask_app = _f.Flask(name, static_folder=static_folder,
                                   template_folder=template_folder)
-        self.flask_app.config['SECRET_KEY'] = secret
+        self.flask_config = self.flask_app.config
+        # self.flask_config['SECRET_KEY'] = secret
         self.flask_app.flaskly = self
         # app.session_interface = LogoutSessionInterface(app.session_interface)
-        self._csrf = _CSRFProtect(self.flask_app)
+        # self._csrf = _CSRFProtect(self.flask_app)
         self.core_bp = _f.Blueprint('core', __name__, url_prefix='/core',
                                     static_folder=STATIC_FOLDER, template_folder=TEMPLATE_FOLDER)
         self.api_bp = _f.Blueprint('api', __name__, url_prefix='/api')
@@ -141,18 +144,43 @@ class FlasklyApp:
 
         self.core_bp.add_url_rule('/cron', 'cron', cron_endpoint)
 
-    def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
+        self.redis = None
+
+    def _init_app(self, debug=False):
+        if self._init:
+            return
         # Registering Blueprints
+        import os
+        print(os.getcwd())
+        print(self.flask_config.root_path)
+        self.flask_config.from_file('../config.yml', load=yaml.safe_load)
         self.flask_app.register_blueprint(self.core_bp)
         self.flask_app.register_blueprint(self.api_bp)
         self.flask_app.register_blueprint(self.form_bp)
-
         # TODO register error handlers
+
+        # Redis server
+        redis_config = self.flask_config.get('REDIS', False)
+        if redis_config is not False:
+            redis_config = redis_config if redis_config is not None else dict()
+            if 'url' in redis_config:
+                self.redis = Redis.from_url(redis_config['url'])
+            else:
+                self.redis = Redis(
+                    host=redis_config.get('host', None) or ("localhost" if debug else 'redis'),
+                    port=redis_config.get('port', 6379),
+                    db=redis_config.get('core_db', 1),
+                )
 
         # logging level
         if debug:
             import logging
             self.logger.setLevel(logging.DEBUG)
+
+        self._init = True
+
+    def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
+        self._init_app(debug=debug)
 
         # Run flask app
         self.flask_app.run(host=host, port=port, debug=debug, load_dotenv=load_dotenv, **kwargs)
@@ -299,7 +327,8 @@ class FlasklyApp:
             self.config.navigation_map.clear()
         self.config.navigation_map.extend(items)
 
-    def url_for(self, endpoint: str, **values: t.Any) -> str:
+    @staticmethod
+    def url_for(endpoint: str, **values: t.Any) -> str:
         return _f.url_for(endpoint, **values)
 
     def form(self,
@@ -356,6 +385,10 @@ class FlasklyApp:
             return f
 
         return decorator
+
+    def __call__(self, environ: dict, start_response: t.Callable) -> t.Any:
+        self._init_app()
+        return self.flask_app(environ=environ, start_response=start_response)
 
 
 DEFAULT_RENDERERS = {
