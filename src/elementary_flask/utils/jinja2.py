@@ -2,6 +2,7 @@ from flask.globals import session, request, g
 from flask.helpers import get_flashed_messages, url_for
 from jinja2 import Environment, FileSystemLoader
 from jinja2.environment import DEFAULT_FILTERS
+from markupsafe import Markup
 
 from elementary_flask.globals import current_elementary_flask_app as _app
 
@@ -42,4 +43,4 @@ class Jinja2Env:
         if not self.elementary_flask_app:
             self.elementary_flask_app = _app
             self._update_elementary_flask_globals()
-        return self.jinja2_env.get_template(template_name).render(**options)
+        return Markup(self.jinja2_env.get_template(template_name).render(**options))

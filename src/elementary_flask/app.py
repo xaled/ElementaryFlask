@@ -8,8 +8,7 @@ from redis import Redis
 import elementary_flask.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import PageResponse, PageErrorResponse, FavIcon, make_page_response, Theme, LayoutMapping, \
-    EmptyPageLayout, IClassIcon, AbstractIcon, \
-    RenderResponse
+    EmptyPageLayout, IClassIcon, AbstractIcon
 from .components.weak.form import wrap_form_cls, form_endpoint_func, default_form_render, FormResponse
 from .components.weak.navigation import AbstractNavigationProvider, StaticNavigationProvider, Navigation, NavigationLink
 from .cron import cron_endpoint, CronEntry
@@ -150,9 +149,6 @@ class ElementaryFlask:
         if self._init:
             return
         # Registering Blueprints
-        import os
-        print(os.getcwd())
-        print(self.flask_config.root_path)
         self.flask_config.from_file('../config.yml', load=yaml.safe_load)
         self.flask_app.register_blueprint(self.core_bp)
         self.flask_app.register_blueprint(self.api_bp)
@@ -249,13 +245,15 @@ class ElementaryFlask:
 
                 # if isinstance(render_response, RenderError): already handled
                 #     return render_response.error_message, render_response.status_code  # Todo error template
-                if isinstance(render_response, RenderResponse):
-                    if render_response.status_code is not None:
-                        return render_response.content, render_response.status_code, render_response.headers
-                    else:
-                        return render_response.content, render_response.headers
-                else:
-                    return render_response
+
+                # if isinstance(render_response, MarkupPlus):
+                #     if render_response.status_code is not None:
+                #         return render_response.content, render_response.status_code, render_response.headers
+                #     else:
+                #         return render_response.content, render_response.headers
+                # else:
+                #     return render_response
+                return render_response
 
             return _wrap
 

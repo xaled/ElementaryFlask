@@ -1,6 +1,7 @@
 import typing as _typing
 from typing import Optional, List, Dict, AnyStr, Set, Iterable
 
+from markupsafe import Markup
 import flask.typing as _flask_typing
 
 ResponseReturnValue = _flask_typing.ResponseReturnValue
@@ -15,8 +16,9 @@ Any = _typing.Any
 Tuple = _typing.Tuple
 Iterable = Iterable
 
-RenderResponse = "RenderResponse"
-RenderReturnValue = Union["RenderResponse", Optional[str]]
+# MarkupPlus = "MarkupPlus"
+# RenderReturnValue = Union[MarkupPlus, Optional[str], Markup]
+RenderReturnValue = Union[str, Markup]
 Renderable = "Renderable"
 
 # class Renderable:

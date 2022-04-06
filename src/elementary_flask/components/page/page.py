@@ -1,7 +1,9 @@
 __all__ = ['AbstractPage']
 
 from abc import ABC, abstractmethod
-from html import escape as html_escape
+
+# from html import escape as html_escape
+from markupsafe import Markup, escape
 
 from elementary_flask.globals import current_elementary_flask_app as _app
 from elementary_flask.includes import reduce_includes, ComponentIncludes
@@ -21,7 +23,8 @@ class AbstractPage(AbstractComponent, ABC):
 
     def render(self, **options) -> RenderReturnValue:
         response = options.get('page_response', None)
-        return '<!DOCTYPE html><html>' + self.render_head_tag(response) + self.render_body_tag(**options) + '</html>'
+        return Markup('<!DOCTYPE html><html>') + self.render_head_tag(response) + self.render_body_tag(**options) + \
+               Markup('</html>')
 
     @classmethod
     def reduce_includes(cls):
@@ -46,7 +49,7 @@ class AbstractPage(AbstractComponent, ABC):
         title = page_response.title if page_response and page_response.title is not None else \
             self.title if self.title is not None else getattr(_app.config, 'default_title', None)
         if title is not None:
-            head += f'<title>{html_escape(title)}</title>'
+            head += f'<title>{escape(title)}</title>'
 
         # Meta tags
         for meta in META_TAGS_KEYS:
@@ -57,13 +60,13 @@ class AbstractPage(AbstractComponent, ABC):
             else:
                 meta_value = getattr(_app.config.default_meta_tags, meta, None)
             if meta_value:
-                head += f'<meta name="{meta}" content="{html_escape(meta_value)}">'
+                head += f'<meta name="{meta}" content="{escape(meta_value)}">'
 
         # Head includes
         head += self.reduce_includes().render_head_includes()
 
         head += "</head>"
-        return head
+        return Markup(head)
 
     def render_body_tag(self, **options) -> RenderReturnValue:
         # body = '<body>'
@@ -81,8 +84,8 @@ class AbstractPage(AbstractComponent, ABC):
         #
         #
         # return body
-        return '<body>' + self.render_page_content(**options) + \
-               self.reduce_includes().render_body_includes() + '</body>'
+        return Markup('<body>') + self.render_page_content(**options) + \
+               Markup(self.reduce_includes().render_body_includes() + '</body>')
 
     @abstractmethod
     def render_page_content(self, **options) -> RenderReturnValue:
