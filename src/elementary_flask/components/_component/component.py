@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from markupsafe import Markup
 
 from elementary_flask.typing import RenderReturnValue, Block
+from elementary_flask.globals import current_elementary_flask_app as _app
 
 
 class Renderable(ABC):
@@ -43,7 +44,10 @@ class AbstractComponent(Renderable):
         raise NotImplementedError()
 
     def __repr__(self):
-        return self.render()
+        try:
+            return self.render()
+        except:
+            return object.__repr__(self)
 
     def __str__(self):
         return self.render()
@@ -72,7 +76,8 @@ def _render(block: Block, **options) -> RenderReturnValue:
         if hasattr(block, '__html__'):
             return block.__html__()
     except Exception as e:
-        if getattr(block, 'error_strategy', None) == 'safe':  # TODO override with app error strategy
+        if getattr(block, 'error_strategy', None) == 'safe' \
+                and not _app.flask_config.get('ELEMENTARY_FLASK_RENDER_ERROR_STRATEGY', None) == 'raise':
             return 'Error'
         raise RenderException('Error while rendering: ', e)
     raise RenderException('Unsupported block type')
@@ -83,6 +88,8 @@ def render(*blocks: Iterable[Block], separator=None) -> RenderReturnValue:
     first = True
     no_separator = not separator
     for b in blocks:
+        if not b:
+            continue
         if no_separator or first:
             res += _render(b)
         else:

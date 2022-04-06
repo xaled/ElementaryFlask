@@ -172,6 +172,7 @@ class ElementaryFlask:
         if debug:
             import logging
             self.logger.setLevel(logging.DEBUG)
+            self.flask_config['ELEMENTARY_FLASK_RENDER_ERROR_STRATEGY'] = 'raise'
 
         self._init = True
 

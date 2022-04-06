@@ -23,7 +23,7 @@ class AbstractHTMLElementComponent(AbstractComponent, ABC):
 
     def render(self, /, id_=None, extra_classes=None, tag_attributes=None, **options) -> RenderReturnValue:
         attributes = dict(self.base_attributes)
-        tag_attributes = dict(tag_attributes)
+        tag_attributes = dict(tag_attributes) if tag_attributes else dict()
         if id_:
             tag_attributes['id'] = id_
         if extra_classes:
