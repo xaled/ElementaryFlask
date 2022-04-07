@@ -15,25 +15,27 @@ class AbstractHTMLElementComponent(AbstractComponent, ABC):
     html_tag = None
     classes = None
 
-    def __init__(self, id_=None, extra_classes=None, tag_attributes=None):
-        self.base_attributes = tag_attributes or dict()
-        self.base_attributes['class'] = _append_classes(self.classes, extra_classes)
-        if id_:
-            self.base_attributes['id'] = id_
-
-    def render(self, /, id_=None, extra_classes=None, tag_attributes=None, **options) -> RenderReturnValue:
-        attributes = dict(self.base_attributes)
-        tag_attributes = dict(tag_attributes) if tag_attributes else dict()
-        if id_:
-            tag_attributes['id'] = id_
+    def __init__(self, extra_classes=None, **attributes):
+        self.base_attributes = attributes or dict()
+        if self.classes:
+            self.base_attributes.setdefault('class', self.classes)
         if extra_classes:
-            tag_attributes['class'] = _append_classes(tag_attributes.get('class', None), extra_classes)
-        attributes.update(tag_attributes)
+            self.base_attributes['class'] = _append_classes(self.base_attributes.get('class', None), extra_classes)
 
-        ret = Markup("<%s %s>" % (self.html_tag, self.html_params(**attributes))) + self.render_inner_html()
+    def render_start_tag(self, extra_classes=None, **attributes):
+        _attributes = dict(self.base_attributes)
+        _attributes.update(attributes)
+        if extra_classes:
+            _attributes['class'] = _append_classes(_attributes.get('class', None), extra_classes)
+        return Markup("<%s %s>" % (self.html_tag, self.html_params(**_attributes)))
+
+    def render_end_tag(self):
         if not self.void_element:
-            ret += Markup('</%s>' % self.html_tag)
-        return ret
+            return Markup('</%s>' % self.html_tag)
+        return ''
+
+    def render(self, /, extra_classes=None, tag_attributes=None, **options) -> RenderReturnValue:
+        return self.render_start_tag() + self.render_inner_html() + self.render_end_tag()
 
     @abstractmethod
     def render_inner_html(self, **options) -> RenderReturnValue:
