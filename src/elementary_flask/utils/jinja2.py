@@ -4,6 +4,7 @@ from jinja2 import Environment, FileSystemLoader
 from jinja2.environment import DEFAULT_FILTERS
 from markupsafe import Markup
 
+from elementary_flask.components import render
 from elementary_flask.globals import current_elementary_flask_app as _app
 
 
@@ -19,6 +20,9 @@ class Jinja2Env:
             request=request,
             session=session,
             g=g,
+        )
+        self.jinja2_env.filters.update(
+            render=render
         )
         self.parent = parent
         self.elementary_flask_app = elementary_flask_app

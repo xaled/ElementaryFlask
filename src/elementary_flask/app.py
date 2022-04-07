@@ -7,9 +7,7 @@ from redis import Redis
 import elementary_flask.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import FavIcon, Theme, LayoutMapping, \
-    EmptyPageLayout
-from .components.weak.form import default_form_render
-from .components.weak.navigation import AbstractNavigationProvider, StaticNavigationProvider, Navigation
+    EmptyPageLayout, render, default_form_render, AbstractNavigationProvider, StaticNavigationProvider, Navigation
 from .cron import cron_endpoint, CronEntry
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
@@ -59,6 +57,7 @@ class ElementaryFlask(ElementaryScaffold):
         # App Config
         self.config = SimpleNamespace()
         self.flask_app.update_template_context(dict(elementary_flask_config=self.config))
+        self.flask_app.jinja_env.filters.update(render=render)
 
         # Default includes
         self.config.default_includes = default_includes or ComponentIncludes()

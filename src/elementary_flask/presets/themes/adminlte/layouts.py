@@ -1,11 +1,11 @@
-from elementary_flask.components import EmptyPageLayout, render
+from elementary_flask.components import EmptyPageLayout
 from ._jinja2_env import jinja2_env
 
 
 class AdminLTEDefaultLayout(EmptyPageLayout):
     def render_body_tag(self, page_response, **options) -> str:
         return jinja2_env.render_template('layouts/default_body.html',
-                                          main=render(page_response.blocks.get('main', '')),
+                                          page_response=page_response,
                                           body_includes=self.reduce_includes().render_body_includes()
                                           )
         # rendered_blocks = ns.rendered_blocks
