@@ -5,8 +5,8 @@ import re
 from flask.scaffold import setupmethod
 
 import elementary_flask.typing as t
-from elementary_flask.components import IClassIcon, NavigationLink, wrap_form_cls, form_endpoint_func, \
-    page_view_function
+from elementary_flask.components import IClassIcon, NavigationLink, wrap_form_cls, form_endpoint_wrapper, \
+    page_view_wrapper
 from elementary_flask.cron import CronEntry
 
 _form_name_validator = re.compile(r'^[a-z0-9_]+$', re.IGNORECASE)
@@ -104,7 +104,7 @@ class ElementaryScaffold:
             # self.add_url_rule(rule, _ep, wrapper, methods=methods, **options)
 
             options['methods'] = ['GET']
-            self._register_endpoint_function(rule, f, _ep, page_view_function, options,
+            self._register_endpoint_function(rule, f, _ep, page_view_wrapper, options,
                                              wrapper_kwargs=dict(default_page_layout=page_layout))
             return f
 
@@ -151,7 +151,7 @@ class ElementaryScaffold:
 
             # register form endpoint
             options['methods'] = ['POST']
-            self._register_endpoint_function('/form' + rule, cls, n, form_endpoint_func, options)
+            self._register_endpoint_function('/form' + rule, cls, n, form_endpoint_wrapper, options)
             return cls
 
         return decorator

@@ -1,9 +1,9 @@
-__all__ = ['form_endpoint_func']
+__all__ = ['form_endpoint_wrapper']
 from elementary_flask.globals import current_elementary_flask_app as _app
 from .response import FormResponse
 
 
-def form_endpoint_func(frm_cls):
+def form_endpoint_wrapper(frm_cls):
     def _wrap():  # TODO typing form response
         _frm = frm_cls()
         if _frm.validate_on_submit():
