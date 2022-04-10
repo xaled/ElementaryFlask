@@ -2,7 +2,6 @@ from types import SimpleNamespace
 
 import flask as _f
 import yaml
-from redis import Redis
 from werkzeug.exceptions import HTTPException
 
 import elementary_flask.typing as t
@@ -152,19 +151,6 @@ class ElementaryFlask(ElementaryScaffold):
             return _app.get_layout('error').render(
                 page_response=PageErrorResponse(e.code, e.name, e.description)
             )
-
-        # Redis server
-        redis_config = self.flask_config.get('REDIS', False)
-        if redis_config is not False:
-            redis_config = redis_config if redis_config is not None else dict()
-            if 'url' in redis_config:
-                self.redis = Redis.from_url(redis_config['url'])
-            else:
-                self.redis = Redis(
-                    host=redis_config.get('host', None) or ("localhost" if debug else 'redis'),
-                    port=redis_config.get('port', 6379),
-                    db=redis_config.get('core_db', 1),
-                )
 
         # logging level
         self.logger = self.flask_app.logger
