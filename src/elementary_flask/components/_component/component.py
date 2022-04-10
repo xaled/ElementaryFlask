@@ -75,11 +75,14 @@ def _render(block: Block, **options) -> RenderReturnValue:
             return block.__html_format__(options.get('format_spec', None))
         if hasattr(block, '__html__'):
             return block.__html__()
+    except RenderException:
+        raise
     except Exception as e:
         if getattr(block, 'error_strategy', None) == 'safe' \
                 and not _app.flask_config.get('ELEMENTARY_FLASK_RENDER_ERROR_STRATEGY', None) == 'raise':
             return 'Error'
-        raise RenderException('Error while rendering: ', e)
+        # raise RenderException('Error while rendering: ', e)
+        raise
     raise RenderException('Unsupported block type')
 
 

@@ -3,11 +3,13 @@ from types import SimpleNamespace
 import flask as _f
 import yaml
 from redis import Redis
+from werkzeug.exceptions import HTTPException
 
 import elementary_flask.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import FavIcon, Theme, LayoutMapping, \
-    EmptyPageLayout, render, default_form_render, AbstractNavigationProvider, StaticNavigationProvider, Navigation
+    EmptyPageLayout, render, default_form_render, AbstractNavigationProvider, StaticNavigationProvider, Navigation, \
+    PageErrorResponse
 from .cron import cron_endpoint, CronEntry
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
 from .presets.themes import DefaultTheme
@@ -15,7 +17,8 @@ from .blueprint import ElementaryScaffold
 
 
 class ElementaryFlask(ElementaryScaffold):
-    def __init__(self, name, secret, static_folder='static', template_folder='templates',
+    def __init__(self, name, flask_app=None, /, *,
+                 create_flask_app=False, flask_app_options=None,
                  default_includes=None, default_meta_tags=None, default_title=None, icons: t.List[FavIcon] = None,
                  theme: t.Optional[t.Union[Theme, str]] = None, include_bootstrap=True,
                  navigation_map: dict = None,
@@ -26,38 +29,22 @@ class ElementaryFlask(ElementaryScaffold):
                  renderers=None,
                  crontab: t.Iterable[CronEntry] = None,
                  **options):
-        # from .auth import LogoutSessionInterface
 
-        # # TEMPLATE_DIR = "template/bt4"
-        # MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
-        # TEMPLATE_DIR = os.path.join(MODULE_DIR, 'template')
-        # STATIC_DIR = os.path.join(MODULE_DIR, 'static')
-        # app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
         ElementaryScaffold.__init__(self)
         self._init = False
         self.name = name
-        self.flask_app = _f.Flask(name, static_folder=static_folder,
-                                  template_folder=template_folder)
-        self.flask_config = self.flask_app.config
-        # self.flask_config['SECRET_KEY'] = secret
-        self.flask_app.elementary_flask = self
-        # app.session_interface = LogoutSessionInterface(app.session_interface)
-        # self._csrf = _CSRFProtect(self.flask_app)
+
+        self.flask_app = flask_app
+        if not self.flask_app and create_flask_app:
+            flask_app_options = flask_app_options or dict()
+            self.flask_app = _f.Flask(name, **flask_app_options)
+
+        self.flask_config = None
         self.core_bp = _f.Blueprint('core', __name__, url_prefix='/core',
                                     static_folder=STATIC_FOLDER, template_folder=TEMPLATE_FOLDER)
-        # self.api_bp = _f.Blueprint('api', __name__, url_prefix='/api')
-        # self.form_bp = _f.Blueprint('form', __name__, url_prefix='/form')
-
-        # @self.flask_app.route('/')
-        # def index():
-        #     return _f.redirect('/app')
-        # self._route_mapping = dict()
-        # self._page_view_functions = dict()
 
         # App Config
         self.config = SimpleNamespace()
-        self.flask_app.update_template_context(dict(elementary_flask_config=self.config))
-        self.flask_app.jinja_env.filters.update(render=render)
 
         # Default includes
         self.config.default_includes = default_includes or ComponentIncludes()
@@ -114,7 +101,6 @@ class ElementaryFlask(ElementaryScaffold):
         )
 
         # Core jinja2 environment
-        # self.core_jinja_env = Environment(autoescape=True, loader=FileSystemLoader(TEMPLATE_FOLDER))
         from elementary_flask.utils.jinja2 import Jinja2Env
         self.core_jinja_env = Jinja2Env(TEMPLATE_FOLDER)
 
@@ -125,15 +111,12 @@ class ElementaryFlask(ElementaryScaffold):
         self.config.navigation = Navigation()
 
         # Logger
-        self.logger = self.flask_app.logger
+        self.logger = None
 
         # Renderers
         self.renderers = dict(DEFAULT_RENDERERS)
         if renderers:
             self.renderers.update(renderers)
-
-        # Default Template filters
-        # self.flask_app.add_template_filter()
 
         # Crontab & cron endpoint rule
         self.crontab = self.elementary_ns.crontab  # Default crons
@@ -144,15 +127,31 @@ class ElementaryFlask(ElementaryScaffold):
 
         self.redis = None
 
-    def _init_app(self, debug=False):
+        # init app
+        if self.flask_app:
+            self.init_app(self.flask_app)
+
+    def init_app(self, flask_app, /, *, debug=False):
         if self._init:
             return
+        self.flask_app = flask_app
+        self.flask_app.elementary_flask = self
+        self.flask_app.update_template_context(dict(elementary_flask_config=self.config))
+        self.flask_app.jinja_env.filters.update(render=render)
+        self.flask_config = self.flask_app.config
+
         # Registering Blueprints
         self.flask_config.from_file('../config.yml', load=yaml.safe_load)
         self.flask_app.register_blueprint(self.core_bp)
-        # self.flask_app.register_blueprint(self.api_bp)
-        # self.flask_app.register_blueprint(self.form_bp)
+
         # TODO register error handlers
+        @self.flask_app.errorhandler(HTTPException)
+        def handle_exception(e):
+            """Renders the HTTP exception."""
+            from elementary_flask.globals import current_elementary_flask_app as _app
+            return _app.get_layout('error').render(
+                page_response=PageErrorResponse(e.code, e.name, e.description)
+            )
 
         # Redis server
         redis_config = self.flask_config.get('REDIS', False)
@@ -168,35 +167,31 @@ class ElementaryFlask(ElementaryScaffold):
                 )
 
         # logging level
+        self.logger = self.flask_app.logger
+
+        # Debug
         if debug:
-            import logging
-            self.logger.setLevel(logging.DEBUG)
-            self.flask_config['ELEMENTARY_FLASK_RENDER_ERROR_STRATEGY'] = 'raise'
+            self._set_debug_env()
 
         self._init = True
 
+    def _set_debug_env(self):
+        import logging
+        self.logger.setLevel(logging.DEBUG)
+        self.flask_config['ELEMENTARY_FLASK_RENDER_ERROR_STRATEGY'] = 'raise'
+
     def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
-        self._init_app(debug=debug)
+        # self.init_app(self.flask_app, debug=debug)
+        if debug:
+            self._set_debug_env()
 
         # Run flask app
         self.flask_app.run(host=host, port=port, debug=debug, load_dotenv=load_dotenv, **kwargs)
 
     def get_layout(self, layout_name):
-        # ignore = ignore or list()
-        # if self.theme.layouts_mapping not in ignore:
-        #     res = self.theme.layouts_mapping.get_layout(layout_name)
-        #     if res:
-        #         return res
-        # if self.layout_mapping not in ignore:
-        #     return self.layout_mapping.get_layout(layout_name)
-        # return self.layout_mapping.layouts['default']
-
-        # if self.theme:
         return self.theme.layouts_mapping.get_layout(layout_name)
-        # return self.layouts_mapping.get_layout(layout_name)
 
     def render_core_template(self, template_name, **kwargs):
-        # return self.core_jinja_env.get_template(template_name).render(*args, **kwargs)
         return self.core_jinja_env.render_template(template_name, **kwargs)
 
     def set_navigation_provider(self, navigation_provider: AbstractNavigationProvider):
@@ -211,9 +206,9 @@ class ElementaryFlask(ElementaryScaffold):
     def url_for(endpoint: str, **values: t.Any) -> str:
         return _f.url_for(endpoint, **values)
 
-    def __call__(self, environ: dict, start_response: t.Callable) -> t.Any:
-        self._init_app()
-        return self.flask_app(environ=environ, start_response=start_response)
+    # def __call__(self, environ: dict, start_response: t.Callable) -> t.Any:
+    #     self.init_app()
+    #     return self.flask_app(environ=environ, start_response=start_response)
 
     def add_url_rule(
             self,
@@ -230,6 +225,8 @@ class ElementaryFlask(ElementaryScaffold):
         return self.flask_app.register_blueprint(blueprint, **options)
 
     def _is_setup_finished(self) -> bool:
+        if self.flask_app is None:
+            raise ValueError('setup method called before Flask App is init')
         return self.flask_app._is_setup_finished()
 
 

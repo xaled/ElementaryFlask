@@ -35,7 +35,8 @@ class PageResponse:
 
 
 class PageErrorResponse(PageResponse):
-    def __init__(self, status_code, status_code_msg=None, page_layout=None, headers=None, title=None):
+    def __init__(self, status_code, status_code_msg="", status_code_description="",
+                 page_layout=None, headers=None, title=None):
         # TODO default status_code_msg for status_code
         if status_code_msg is None and status_code >= 400:
             status_code_msg = HTTP_STATUS_DICT.get(status_code, 'Error')
@@ -43,7 +44,9 @@ class PageErrorResponse(PageResponse):
         if page_layout is None:
             page_layout = 'error'
 
-        super(PageErrorResponse, self).__init__(HTTPError(status_code=status_code, error_message=status_code_msg),
+        super(PageErrorResponse, self).__init__(HTTPError(status_code=status_code,
+                                                          status_code_name=status_code_msg,
+                                                          status_code_description=status_code_description),
                                                 status_code=status_code,
                                                 status_code_msg=status_code_msg,
                                                 page_layout=page_layout, title=title,

@@ -3,7 +3,7 @@
     <div class="error-content">
         <h3><i class="fas fa-exclamation-triangle text-{{ error_color }}"></i> {{ error_message }}</h3>
         <p>
-            Oops! Something went wrong!
+            {{ error_description or 'Oops! Something went wrong!' }}
             Meanwhile, you may <a href="/">return to home</a>.{#   or try using the search form.#}
         </p>
         {#        <form class="search-form">#}
