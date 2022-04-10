@@ -130,6 +130,8 @@ class ElementaryFlask(ElementaryScaffold):
         if self.flask_app:
             self.init_app(self.flask_app)
 
+        self._teardown_functions = list()
+
     def init_app(self, flask_app, /, *, debug=False):
         if self._init:
             return
@@ -143,7 +145,7 @@ class ElementaryFlask(ElementaryScaffold):
         self.flask_config.from_file('../config.yml', load=yaml.safe_load)
         self.flask_app.register_blueprint(self.core_bp)
 
-        # TODO register error handlers
+        # Error handler
         @self.flask_app.errorhandler(HTTPException)
         def handle_exception(e):
             """Renders the HTTP exception."""
@@ -151,6 +153,9 @@ class ElementaryFlask(ElementaryScaffold):
             return _app.get_layout('error').render(
                 page_response=PageErrorResponse(e.code, e.name, e.description)
             )
+
+        # Teardown
+        self.flask_app.teardown_appcontext(self.teardown)
 
         # logging level
         self.logger = self.flask_app.logger
@@ -214,6 +219,16 @@ class ElementaryFlask(ElementaryScaffold):
         if self.flask_app is None:
             raise ValueError('setup method called before Flask App is init')
         return self.flask_app._is_setup_finished()
+
+    def teardown(self, exception):
+        for f in self._teardown_functions:
+            try:
+                f(exception)
+            except Exception as e:
+                pass  # TODO
+
+    def append_teardown(self, func):
+        self._teardown_functions.append(func)
 
 
 DEFAULT_RENDERERS = {
