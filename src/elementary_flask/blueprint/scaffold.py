@@ -90,19 +90,6 @@ class ElementaryScaffold:
                 self.elementary_ns.navigation_map.append(
                     NavigationLink(title=_nt, endpoint=_ep, params=navigation_params,
                                    icon=_ni))
-            # # print(_ep)
-            # old_f, old_wrapper = self.elementary_ns.page_view_functions.get(_ep, (None, None))
-            # if old_f is not None and old_f != f:
-            #     raise AssertionError(
-            #         "View function mapping is overwriting an existing"
-            #         f" endpoint function: {_ep}"
-            #     )
-            # elif old_f is None:
-            #     self.elementary_ns.page_view_functions[_ep] = f, page_view_function(f, default_page_layout=page_layout)
-            #
-            # wrapper = self.elementary_ns.page_view_functions[_ep][1]
-            #
-            # self.add_url_rule(rule, _ep, wrapper, methods=methods, **options)
 
             options['methods'] = ['GET']
             self._register_endpoint_function(rule, f, _ep, page_view_wrapper, options,
@@ -111,18 +98,6 @@ class ElementaryScaffold:
 
         return decorator
 
-    # @setupmethod
-    # def listing(self, rule: str, endpoint: t.OptionalStr = None, **options):  # TODO change bp
-    #
-    #     def decorator(cls):
-    #         # TODO: sanitize rule
-    #         for rule_suffix in ('',):  # '/<int:page>', '/<str:filter>', '/<str:filter>/<int:page>'):
-    #             self._route_page(rule + rule_suffix, endpoint or cls.__name__,
-    #                              methods=['GET', 'POST'], **options)(cls.page_view)
-    #
-    #         return cls
-    #
-    #     return decorator
 
     @setupmethod
     def listing(self,
@@ -205,7 +180,7 @@ class ElementaryScaffold:
 
         wrapped = self.elementary_ns.page_view_functions[endpoint][1]
 
-        self.add_url_rule(rule, endpoint, wrapped, **add_url_options)
+        self.add_url_rule(rule, endpoint, wrapped, **add_url_options)  # noqa
 
     @setupmethod
     def cron(self, expr_format: str, /, *, name: str = None, hash_id=None, args=None, kwargs=None):
@@ -221,10 +196,6 @@ class ElementaryScaffold:
         if isinstance(self, Blueprint):
             return self.name + '.'
         return ''
-
-    # def register(self, app):
-    #     app.register_blueprint(self.elementary_ns.form_bp)
-    #     app.register_blueprint(self.elementary_ns.api_bp)
 
 
 def _validate_rule(rule):

@@ -106,17 +106,6 @@ class ComponentIncludes:
             self.js_includes = None
 
     def __add__(self, other):
-        # return ComponentIncludes(
-        #     css_includes=self.css_includes.union(other.css_includes),
-        #     js_includes=self.js_includes.union(other.js_includes),
-        # )
-        # union_dependencies = {d.name: d for d in self.dependencies}
-        # for od in other.dependencies:
-        #     if od.name in union_dependencies:
-        #         union_dependencies[od.name] += od
-        #     else:
-        #         union_dependencies[od.name] = od
-        # return ComponentIncludes(list(union_dependencies.items()))
         if other is None:
             return self
 
@@ -185,12 +174,6 @@ class BootstrapDependency(Dependency):
 
         super(BootstrapDependency, self).__init__('bootstrap', version=version, theme=theme, dependencies=dependencies,
                                                   links=links)
-    # [
-    #     DependencyLink(
-    #         'https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css',
-    #         include_type='css',
-    #         integrity='sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn'),
-    #     _bootstrap_js_links[BOOTSTRAP4]])
 
 
 class IncludeVersionIncompatibility(Exception):
@@ -239,8 +222,6 @@ def create_dependency_links(links, css_includes=None, js_includes=None):
 def _compare_version(v1, v2):
     if v1 == v2:
         return v1
-    # if isinstance(v1, str) and isinstance(v2, str):
-    #     return _compare_version_str(v1, v2)
     if not (isinstance(v1, tuple) and isinstance(v2, tuple)):
         raise IncludeVersionIncompatibility()
 
@@ -277,8 +258,6 @@ def reduce_includes(*includes_or_components) -> ComponentIncludes:
             if itm is None:
                 continue
 
-            # if isinstance(itm, AbstractComponent):
-            #     itm = itm.component_includes
 
             if isinstance(itm, ComponentIncludes):
                 if ret is None:

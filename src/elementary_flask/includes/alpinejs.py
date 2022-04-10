@@ -5,7 +5,6 @@ DEFAULT_ALPINEJS_DEPENDENCY = Dependency(
     name='alpinejs',
     version=DEFAULT_ALPINEJS_VERSION,
     links=[JavascriptDependencyLink(
-        # link="https://cdn.jsdelivr.net/npm/alpinejs@" + format_str_version(DEFAULT_ALPINEJS_VERSION),
         link="https://unpkg.com/alpinejs@3.9.1/dist/cdn.min.js",
         include_position='head',
         defer=True,
