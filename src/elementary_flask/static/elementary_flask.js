@@ -120,7 +120,40 @@ let ElementaryFlask = {
     },
 
     toast: function (msg, type = 'error', title = '', sticky = false, timeout = 10) {
+        // check if AdminLTE Toasts exists: # TODO replace with more generic toast plugin
+        if (typeof $(document).Toasts == 'function')
+            return ElementaryFlask._adminlte_toast(msg, type, title, sticky, timeout)
+
         alert(msg);
+    },
+    _adminlte_toast: function (msg, type = 'error', title = 'Error',
+                               sticky = true, timeout = 10) {
+        let icon = null;
+        switch (type) {
+            case 'error':
+                icon = "fas fa-exclamation-circle text-danger";
+                break;
+            case 'warning':
+                icon = "fas fa-exclamation-triangle text-warning";
+                break;
+            case 'success':
+                icon = "fas fa-check-circle text-success";
+                break;
+            case 'info':
+                icon = "fas fa-info-circle text-info";
+                break;
+        }
+        if (msg.length < 50) {
+            msg += '&nbsp;'.repeat(50 - msg.length);
+        }
+        $(document).Toasts('create', {
+            title: title,
+            body: msg,
+            icon: icon,
+            autohide: !sticky,
+            delay: !sticky ? timeout * 1000 : null
+        });
+
     },
 
     redirect: function (dst) {
