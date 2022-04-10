@@ -1,6 +1,8 @@
 __all__ = ['FormAction', 'FormResponse', 'redirect', 'refresh', 'toast', 'jseval', 'replace_html', 'update_form',
            'update_state', 'error']
+
 from dataclasses import dataclass
+from collections.abc import Iterable
 
 from wtforms import Form
 
@@ -25,10 +27,10 @@ class FormResponse:
     actions: FormActionInit
 
     def __post_init__(self):
-        if isinstance(self.actions, FormAction):
+        if not isinstance(self.actions, Iterable):
             self.actions = [self.actions]
-        elif isinstance(self.actions, Form):  # TODO stateless & submit forms
-            self.actions = [update_form(self.actions)]
+
+        self.actions = list(update_form(a) if isinstance(a, Form) else a for a in self.actions)
 
     def to_dict(self):
         return {'actions': [a.to_dict() for a in self.actions]}

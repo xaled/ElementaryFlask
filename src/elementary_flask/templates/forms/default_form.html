@@ -1,4 +1,4 @@
-<form method="POST" action="{{ url_for(form.elementary_flask_form_id) }}"
+<form method="POST" action="{{ url_forurl_for(form.elementary_flask_action_endpoint) }}"
       onsubmit="ElementaryFlask.submitForm(this); return false">
     {{ form.hidden_tag() }}
     {% for field in form %}

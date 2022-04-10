@@ -3,6 +3,7 @@ __all__ = ['ElementaryScaffold', 'setupmethod']
 import re
 
 from flask.scaffold import setupmethod
+from flask import Blueprint
 
 import elementary_flask.typing as t
 from elementary_flask.components import IClassIcon, NavigationLink, wrap_form_cls, form_endpoint_wrapper, \
@@ -110,15 +111,46 @@ class ElementaryScaffold:
 
         return decorator
 
+    # @setupmethod
+    # def listing(self, rule: str, endpoint: t.OptionalStr = None, **options):  # TODO change bp
+    #
+    #     def decorator(cls):
+    #         # TODO: sanitize rule
+    #         for rule_suffix in ('',):  # '/<int:page>', '/<str:filter>', '/<str:filter>/<int:page>'):
+    #             self._route_page(rule + rule_suffix, endpoint or cls.__name__,
+    #                              methods=['GET', 'POST'], **options)(cls.page_view)
+    #
+    #         return cls
+    #
+    #     return decorator
+
     @setupmethod
-    def listing(self, rule: str, endpoint: t.OptionalStr = None, **options):  # TODO change bp
+    def listing(self,
+                # name: t.Optional[str] = None,
+                # rendering_type: str = 'stateful',
+                **options: t.Any,
+                ):
+        """Creates a new :class:`Form` and uses the decorated function as
+        callback.
+
+        :param options: extra options passed to flask add_url_rule.
+        """
+
+        # if rendering_type not in FORM_RENDERING_TYPES:
+        #     rendering_type = 'default'
 
         def decorator(cls):
-            # TODO: sanitize rule
-            for rule_suffix in ('',):  # '/<int:page>', '/<str:filter>', '/<str:filter>/<int:page>'):
-                self._route_page(rule + rule_suffix, endpoint or cls.__name__,
-                                 methods=['GET', 'POST'], **options)(cls.page_view)
+            # n = name or cls.__name__
+            n = cls.__name__
+            rule = n
+            if not _form_name_validator.match(rule):
+                raise ValueError('Forbidden value for rule: ' + rule)
 
+            setattr(cls, 'elementary_flask_action_endpoint', self.endpoint_prefix() + n)
+
+            # register form endpoint
+            options['methods'] = ['POST']
+            self._register_endpoint_function('/listing/' + rule, cls, n, form_endpoint_wrapper, options)
             return cls
 
         return decorator
@@ -147,11 +179,11 @@ class ElementaryScaffold:
                 raise ValueError('Forbidden value for rule: ' + rule)
 
             # Make class renderable
-            wrap_form_cls(cls, form_id=n, rendering_type=rendering_type)
+            wrap_form_cls(cls, form_id=n, rendering_type=rendering_type, scaffold=self)
 
             # register form endpoint
             options['methods'] = ['POST']
-            self._register_endpoint_function('/form' + rule, cls, n, form_endpoint_wrapper, options)
+            self._register_endpoint_function('/form/' + rule, cls, n, form_endpoint_wrapper, options)
             return cls
 
         return decorator
@@ -184,6 +216,11 @@ class ElementaryScaffold:
             return f
 
         return decorator
+
+    def endpoint_prefix(self):
+        if isinstance(self, Blueprint):
+            return self.name + '.'
+        return ''
 
     # def register(self, app):
     #     app.register_blueprint(self.elementary_ns.form_bp)

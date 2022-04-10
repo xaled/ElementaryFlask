@@ -54,7 +54,7 @@ let ElementaryFlask = {
         }
         frmData.append("action", button_info.action);
         frmData.delete("id");
-        return ElementaryFlask.privateSubmitForm(null, "", frmData);
+        return ElementaryFlask.privateSubmitForm(null, frm.action, frmData);
 
     },
 

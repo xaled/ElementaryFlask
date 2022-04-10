@@ -6,14 +6,13 @@ from flask import request
 from flask_wtf import FlaskForm
 from werkzeug.datastructures import ImmutableMultiDict, CombinedMultiDict, ImmutableDict
 
-from elementary_flask.globals import current_elementary_flask_app as _app
 from elementary_flask.typing import FormResponseReturn
 from ._page_uri import page_uri
 from .action import ListingAction
 from .column import ListingColumn
 from .filter import ListingFilter, get_parsed_filters
 from .renderer import default_listing_render
-from ..form import error, FormResponse, redirect
+from ..form import error, redirect
 from ... import AbstractWeakComponent
 
 SUBMIT_METHODS = ("POST", "PUT", "PATCH", "DELETE")
@@ -38,23 +37,6 @@ class AbstractListing(AbstractWeakComponent, ABC):
         super(AbstractListing, self).__init__()
         self.view_page_kwargs = None
         self.view_form = FlaskForm()
-
-    def __call__(self, **kwargs):
-        if bool(request) and request.method == 'GET':
-            self.view_page_kwargs = kwargs
-            return self
-        if _is_submitted():
-            # TODO: validate on submit
-
-            form_response = self.on_submit()
-
-            if not isinstance(form_response, FormResponse):
-                form_response = FormResponse(form_response)
-
-            _app.logger.debug('Listing %s action submit data: %s, response: %s',
-                              self.__class__.__name__, request.form, form_response)
-            return form_response
-        return False
 
     def list_items_request(self):
         def _correct_page(p, mp):
@@ -175,6 +157,10 @@ class AbstractListing(AbstractWeakComponent, ABC):
 
     def listing_id(self):
         return self.__class__.__name__ + '.' + str(hash(self))
+
+    @classmethod
+    def form_action(cls):
+        return '/listing'
 
     # @classmethod
     # def field_title(cls, field_name):

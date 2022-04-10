@@ -117,8 +117,9 @@
                 </div>
             </div>
         </div>
-        <form method="post" id="{{ listing.listing_id() }}" onsubmit="return false;">
-            {{ listing.view_form.hidden_tag() }}
+        <form method="post" id="{{ listing.listing_id() }}"
+              action="{{ url_for(listing.elementary_flask_action_endpoint) }}"
+              onsubmit="return false;">
             <div class="table-responsive mt-5">
                 <table class="table table-hover">
                     <thead {{ listing.hidden_thead() }}>
