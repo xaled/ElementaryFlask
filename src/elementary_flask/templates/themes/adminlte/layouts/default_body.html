@@ -69,8 +69,19 @@
         </section>
 
         <section class="content">
-            {{ page_response.blocks.main | render }}
-
+            {% if card_container %}
+                <div class="card">
+                    {% if page_response.blocks.card_header %}
+                        <div class="card-header">{{ page_response.blocks.card_header | render }}</div>
+                    {% endif %}
+                    <div class="card-body">{{ page_response.blocks.main | render }}</div>
+                    {% if page_response.blocks.card_footer %}
+                        <div class="card-header">{{ page_response.blocks.card_footer | render }}</div>
+                    {% endif %}
+                </div>
+            {% else %}
+                {{ page_response.blocks.main | render }}
+            {% endif %}
         </section>
 
     </div>

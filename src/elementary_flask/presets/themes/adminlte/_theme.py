@@ -24,6 +24,7 @@ class AdminLTETheme(Theme):
     ])
     layouts_mapping = LayoutMapping(
         default=AdminLTEDefaultLayout(),
+        card=AdminLTEDefaultLayout(card_container=True),
     )
     renderers = {
         "HTTPError": render_http_error,
