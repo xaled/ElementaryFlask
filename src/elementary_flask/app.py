@@ -142,7 +142,7 @@ class ElementaryFlask(ElementaryScaffold):
         self.flask_config = self.flask_app.config
 
         # Registering Blueprints
-        self.flask_config.from_file('../config.yml', load=yaml.safe_load)
+        self.flask_config.from_file('config.yml', load=yaml.safe_load)
         self.flask_app.register_blueprint(self.core_bp)
 
         # Error handler
