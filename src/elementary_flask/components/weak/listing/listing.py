@@ -11,6 +11,7 @@ from ._page_uri import page_uri
 from .action import ListingAction
 from .column import ListingColumn
 from .filter import ListingFilter, get_parsed_filters
+from .sort import get_parsed_sort
 from .renderer import default_listing_render
 from ..form import error, redirect
 from ... import AbstractWeakComponent
@@ -32,6 +33,7 @@ class AbstractListing(AbstractWeakComponent, ABC):
     default_renderer = default_listing_render
     show_header = True
     items_per_page = 20
+    default_sort = None
 
     def __init__(self):
         super(AbstractListing, self).__init__()
@@ -51,8 +53,9 @@ class AbstractListing(AbstractWeakComponent, ABC):
         except:
             page = 1
         items_per_page = self.items_per_page
-        filters = request.args.get('filters', None) or None
-        query = request.args.get('query', None) or None
+        filters = request.args.get('filters', None)
+        query = request.args.get('query', None)
+        sort = request.args.get('sort', None)
         c_total = self.count_items(filters=get_parsed_filters(), query=query)
         max_page = (c_total // items_per_page) + (1 if c_total % items_per_page else 0)
         page = _correct_page(page, max_page)
@@ -63,14 +66,14 @@ class AbstractListing(AbstractWeakComponent, ABC):
         else:
             count_str = ""
 
-        next_page = page_uri(page=_correct_page(page + 1, max_page), filters=filters, query=query)
-        previous_page = page_uri(page=_correct_page(page - 1, max_page), filters=filters, query=query)
+        next_page = page_uri(page=_correct_page(page + 1, max_page), filters=filters, query=query, sort=sort)
+        previous_page = page_uri(page=_correct_page(page - 1, max_page), filters=filters, query=query, sort=sort)
         return self.list_items(
             page=page, items_per_page=items_per_page, filters=get_parsed_filters(),
-            query=query), count_str, next_page, previous_page
+            query=query, sort=get_parsed_sort(self.default_sort)), count_str, next_page, previous_page
 
     @abstractmethod
-    def list_items(self, page=1, items_per_page=20, filters=None, query=None):
+    def list_items(self, page=1, items_per_page=20, filters=None, query=None, sort=None):
         raise NotImplementedError()
 
     @abstractmethod

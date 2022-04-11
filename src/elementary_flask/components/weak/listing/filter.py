@@ -11,7 +11,7 @@ from elementary_flask.typing import Union, Callable, Tuple, AbstractIcon
 from ._page_uri import page_uri
 from ... import IClassIcon
 
-GLOBAL_KEY = 'elementary_flask_listing_parsed_filters'
+FILTERS_GLOBAL_KEY = 'elementary_flask_listing_parsed_filters'
 
 
 class TrueFalseChoices:
@@ -22,7 +22,7 @@ TRUE_FALSE_TOGGLE = TrueFalseChoices()
 
 
 def get_parsed_filters():
-    if not hasattr(g, GLOBAL_KEY):
+    if not hasattr(g, FILTERS_GLOBAL_KEY):
         ret = dict()
         filters = request.args.get('filters', None) or None
         if filters:
@@ -34,8 +34,8 @@ def get_parsed_filters():
                     ret[k] = v
                 except ValueError:
                     _app.logger.warning("ignored bad filter value: %s", s)
-        setattr(g, GLOBAL_KEY, ret)
-    return getattr(g, GLOBAL_KEY)
+        setattr(g, FILTERS_GLOBAL_KEY, ret)
+    return getattr(g, FILTERS_GLOBAL_KEY)
 
 
 def dump_filters(filters=None):
@@ -112,7 +112,8 @@ class ListingFilter:
             del new_filters[self.name]
         else:
             new_filters[self.name] = choice
-        return page_uri(query=request.args.get('query', None), filters=dump_filters(new_filters))
+        return page_uri(query=request.args.get('query', None), filters=dump_filters(new_filters),
+                        sort=request.args.get('sort', None))
 
 
 def listing_filter(name, /, *,
