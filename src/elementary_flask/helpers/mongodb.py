@@ -1,4 +1,4 @@
-__all__ = ['mongo_client', 'mongo_db']
+__all__ = ['mongo_client', 'mongo_db', 'connect_mongoengine']
 
 from flask import current_app, _app_ctx_stack  # noqa
 
@@ -17,26 +17,44 @@ def mongo_client():
         return getattr(ctx, MONGO_CLIENT_ATTRIBUTE_NAME)
 
 
-def mongo_db(dbname):
-    return mongo_client()[dbname]
+def mongo_db(db):
+    return mongo_client()[db]
 
 
-def _mongo_client():
-    import pymongo
-    mongo_config = current_app.config.get('MONGODB', False)
+def _setup_mongo_config():
+    elementary_config = current_app.config.setdefault('ELEMENTARY_FLASK', dict())
+    mongo_config = elementary_config.get('mongodb', False)
     debug = current_app.config.get('DEBUG', True)
 
     if mongo_config is not False:
-        mongo_config = mongo_config if mongo_config is not None else dict()
-        if 'url' in mongo_config:
-            return pymongo.MongoClient(mongo_config['url'])
-        else:
-            return pymongo.MongoClient("mongodb://%s:27017/" % 'localhost' if debug else 'mongo')
-            # return Redis(
-            #     host=redis_config.get('host', None) or ("localhost" if debug else 'redis'),
-            #     port=redis_config.get('port', 6379),
-            #     db=redis_config.get('db', 0),
-            # )
+        if not mongo_config:
+            elementary_config['mongodb'] = dict()
+            mongo_config = elementary_config['mongodb']
+
+        if 'url' not in mongo_config:
+            host = mongo_config.setdefault('host', 'localhost' if debug else 'mongo')
+            port = mongo_config.setdefault('port', 27017)
+            db = mongo_config.setdefault('db', 'defaultdb')
+            mongo_config.setdefault('url', "mongodb://%s:%d/%s" % (host, port, db))
+
+        mongo_config.setdefault('connect_mongoengine', False)
+
+    return mongo_config
+
+
+def _mongo_client():
+    import pymongo  # noqa
+    mongo_config = _setup_mongo_config()
+
+    if mongo_config:
+        return pymongo.MongoClient(mongo_config['url'])
+
+
+def connect_mongoengine():
+    mongo_config = _setup_mongo_config()
+    if mongo_config and mongo_config.get('connect_mongoengine'):
+        import mongoengine  # noqa
+        mongoengine.connect(host=mongo_config['url'])
 
 
 def _teardown(exception):

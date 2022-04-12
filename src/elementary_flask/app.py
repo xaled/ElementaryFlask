@@ -125,12 +125,11 @@ class ElementaryFlask(ElementaryScaffold):
         self.core_bp.add_url_rule('/cron', 'cron', cron_endpoint)
 
         self.redis = None
+        self._teardown_functions = list()
 
         # init app
         if self.flask_app:
             self.init_app(self.flask_app)
-
-        self._teardown_functions = list()
 
     def init_app(self, flask_app, /, *, debug=False):
         if self._init:
@@ -142,7 +141,7 @@ class ElementaryFlask(ElementaryScaffold):
         self.flask_config = self.flask_app.config
 
         # Registering Blueprints
-        self.flask_config.from_file('config.yml', load=yaml.safe_load)
+        self.flask_config.from_file('app.config.yml', load=yaml.safe_load)
         self.flask_app.register_blueprint(self.core_bp)
 
         # Error handler
@@ -163,6 +162,11 @@ class ElementaryFlask(ElementaryScaffold):
         # Debug
         if debug:
             self._set_debug_env()
+
+        # Connect mongoengine
+        from elementary_flask.helpers import connect_mongoengine
+        with self.flask_app.app_context():
+            connect_mongoengine()
 
         self._init = True
 

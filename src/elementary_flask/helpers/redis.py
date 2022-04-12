@@ -28,7 +28,8 @@ def redis_client(db=None):
 
 
 def _redis_client(db=None):
-    redis_config = current_app.config.get('REDIS', False)
+    elementary_config = current_app.config.setdefault('ELEMENTARY_FLASK', dict())
+    redis_config = elementary_config.get('redis', False)
     debug = current_app.config.get('DEBUG', True)
     if redis_config is not False:
         redis_config = redis_config if redis_config is not None else dict()
@@ -36,8 +37,8 @@ def _redis_client(db=None):
             return Redis.from_url(redis_config['url'])
         else:
             return Redis(
-                host=redis_config.get('host', None) or ("localhost" if debug else 'redis'),
-                port=redis_config.get('port', 6379),
+                host=redis_config.setdefault('host', "localhost" if debug else 'redis'),
+                port=redis_config.setdefault('port', 6379),
                 db=db if db is None else redis_config.get('db', 0),
             )
 
