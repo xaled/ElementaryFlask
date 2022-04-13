@@ -1,5 +1,8 @@
-__all__ = ["mongo_collection_admin_listing"]
+__all__ = ["mongo_collection_listing", "register_mongo_listing"]
 
+from posixpath import join, abspath
+
+from elementary_flask.utils.frozendict import EMPTY_DICT
 from .listing import AbstractListing, default_listing_render
 
 
@@ -65,7 +68,7 @@ from .listing import AbstractListing, default_listing_render
 #     )
 
 
-def mongo_collection_admin_listing(
+def mongo_collection_listing(
         document_cls, *,
         item_view_uri='./{}',
         item_view_title=None,
@@ -88,12 +91,18 @@ def mongo_collection_admin_listing(
         edit_fields=None,
         filters_fields=None,
         click_action='view',
+        generate_edit_form=True,
+        edit_form=None,
 
 ):
     cls_fields = [k for k, v in document_cls._fields.items() if k != 'id']
     listing_fields = listing_fields or cls_fields
     view_fields = view_fields or cls_fields
     edit_fields = edit_fields or cls_fields
+
+    # edit form
+    if edit_form is None and generate_edit_form:
+        edit_form = _generate_edit_form(document_cls)
 
     class _CLS(AbstractListing):
         _mongo_document_cls = document_cls
@@ -122,6 +131,8 @@ def mongo_collection_admin_listing(
             if len(docs) == 1:
                 return toast("item is deleted", message_type="success")  # TODO refresh items
 
+    _CLS.__name__ = document_cls.__name__ + 'MongoListing'
+
     cls_dict = dict(
         columns=listing_fields,
         id_field=id_field,
@@ -139,6 +150,8 @@ def mongo_collection_admin_listing(
         items_per_page=items_per_page,
         default_sort=default_sort,
         click_action=click_action,
+        edit_form=edit_form,
+        endpoint_functions=None
     )
     for k, v in cls_dict.items():
         setattr(_CLS, k, v)
@@ -146,9 +159,60 @@ def mongo_collection_admin_listing(
     # TODO delete action
     # cls_dict.update(actions)
     # cls_dict.update(filters)
-    _CLS.__name__ = document_cls.__name__ + 'MongoListing'
 
     return _CLS
+
+
+def register_mongo_listing(
+        bp, cls, listing_rule, /,
+        page_layout='default',
+        navigation=False,
+        navigation_title=None,
+        navigation_params=None,
+        navigation_icon=None,
+        list_page_options=EMPTY_DICT,
+        listing_options=EMPTY_DICT,
+        view_page_layout='default',
+        view_page_options=EMPTY_DICT,
+        view_page_rule=None,
+        create_page_layout='default',
+        create_page_options=EMPTY_DICT,
+        create_page_rule=None,
+
+):
+    # Listing
+    cls = bp.listing(**listing_options)(cls)
+    cls.endpoint_functions = generate_endpoint_functions(cls)
+
+    # List page
+    bp.route_page(listing_rule,
+                  page_layout=page_layout,
+                  navigation=navigation,
+                  navigation_title=navigation_title,
+                  navigation_params=navigation_params,
+                  navigation_icon=navigation_icon,
+                  **list_page_options)(cls.endpoint_functions['list'])
+
+    # View page
+    if cls.item_view_uri is not None:
+        if view_page_rule is None:
+            view_page_rule = abspath(join(listing_rule, cls.item_view_uri)).format('<doc_id>')
+        bp.route_page(view_page_rule,
+                      page_layout=view_page_layout,
+                      **create_page_options)(cls.endpoint_functions['view'])
+
+    # TODO: create & edit forms + on_submit functions + pages
+    # if cls.edit_form is not None:
+    #     # Create Form
+    #     cls.edit_form = bp.form()(cls.edit_form)
+    #
+    #     # Create Page
+    #     if create_page_rule is None:
+    #         create_page_rule = abspath(join(listing_rule, 'create'))
+    #     bp.route_page(create_page_rule,
+    #                   page_layout=create_page_layout,
+    #                   **view_page_options)(cls.endpoint_functions['create'])
+    return cls
 
 
 def _msort(sort=None):
@@ -162,3 +226,43 @@ def _msort(sort=None):
 def _mfilter(filters=None, query=None):
     # TODO query and filters
     return dict()
+
+
+def _generate_edit_form(document_cls):
+    from flask_mongoengine.wtf import model_form
+    ret = model_form(document_cls)
+    ret.__name__ = document_cls.__name__ + 'EditForm'
+    return ret
+
+
+def generate_endpoint_functions(cls):
+    def list_function():
+        return cls()
+
+    def view_function(doc_id):
+        obj = cls._mongo_document_cls.objects(id=doc_id).first()
+        if obj:
+            return str(dict(obj.to_mongo()))
+        return 404
+
+    list_function.__name__ = cls.__name__ + 'List'
+    view_function.__name__ = cls.__name__ + 'View'
+    ret = dict(list=list_function, view=view_function)
+
+    if cls.edit_form:
+
+        def create_function():
+            return cls.edit_form()
+
+        def edit_function(doc_id):
+            obj = cls._mongo_document_cls.objects(id=doc_id).first()
+            if obj:
+                return cls.edit_form(**dict(obj.to_mongo()))
+            return 404
+
+        create_function.__name__ = cls.__name__ + 'Create'
+        edit_function.__name__ = cls.__name__ + 'Edit'
+        ret['create'] = create_function
+        ret['edit'] = edit_function
+
+    return ret
