@@ -131,7 +131,7 @@ class ElementaryFlask(ElementaryScaffold):
         if self.flask_app:
             self.init_app(self.flask_app)
 
-    def init_app(self, flask_app, /, *, debug=False):
+    def init_app(self, flask_app, /, ):
         if self._init:
             return
         self.flask_app = flask_app
@@ -160,7 +160,7 @@ class ElementaryFlask(ElementaryScaffold):
         self.logger = self.flask_app.logger
 
         # Debug
-        if debug:
+        if self.flask_config['DEBUG']:
             self._set_debug_env()
 
         # Connect mongoengine

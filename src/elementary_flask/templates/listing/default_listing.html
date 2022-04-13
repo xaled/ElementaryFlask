@@ -3,7 +3,7 @@
         {% for a, _action in listing._actions.items() %}
             {% if not _action.hidden and (item or (batch and _action.batch)) %}
                 <button
-                        data-info='{{ {'action':a, 'item_id':'batch' if batch else item[listing.id_field] } | tojson }}'
+                        data-info='{{ {'action':a, 'item_id':'batch' if batch else item[listing.id_field].__str__() } | tojson }}'
                         onclick='ElementaryFlask.submitListingAction(this, "{{ listing.listing_id() }}"); event.stopPropagation();'
                         {# TODO: replace event #}
                         class="btn btn-outline btn-outline-primary"
@@ -134,7 +134,7 @@
                 {% for item in items %}
                     <tr
 
-                            data-info='{{ {'action': 'view', 'item_id': item[listing.id_field] } | tojson }}'
+                            data-info='{{ {'action': 'view', 'item_id': item[listing.id_field].__str__() } | tojson }}'
                             onclick='ElementaryFlask.submitListingAction(this);return false;'
                     >
                         <td class="shrink-cell align-middle"

@@ -23,9 +23,14 @@ class AbstractListing(AbstractWeakComponent, ABC):
     columns = None
     id_field = None
     item_view_uri = None
+    item_view_title = None
+    item_view_icon = None  # TODO: generic icon
     item_edit_uri = None
     item_edit_title = None
-    item_edit_icon = None
+    item_edit_icon = None  # TODO: generic icon
+    item_delete_func = None
+    item_delete_title = None
+    item_delete_icon = None  # TODO: generic icon
     _actions = None
     _columns = None
     _filters = None
@@ -42,10 +47,10 @@ class AbstractListing(AbstractWeakComponent, ABC):
 
     def list_items_request(self):
         def _correct_page(p, mp):
-            if p < 1:
-                p = 1
             if p > mp:
                 p = mp
+            if p < 1:
+                p = 1
             return p
 
         try:
@@ -109,7 +114,8 @@ class AbstractListing(AbstractWeakComponent, ABC):
             # view action
             if 'view' not in actions and cls.item_view_uri:
                 actions['view'] = ListingAction(lambda s, id_: redirect(cls.item_view_uri.format(id_)),
-                                                name='view', hidden=True)
+                                                name='view', hidden=False,
+                                                icon=cls.item_view_icon, title=cls.item_view_title)
             # edit action
             if 'edit' not in actions and cls.item_edit_uri:
                 actions['edit'] = ListingAction(lambda s, id_: redirect(cls.item_edit_uri.format(id_)),
@@ -117,6 +123,14 @@ class AbstractListing(AbstractWeakComponent, ABC):
                                                 icon=cls.item_edit_icon,
                                                 title=cls.item_edit_title,
                                                 )
+            # delete action
+            if 'delete' not in actions and cls.item_delete_func:
+                actions['delete'] = ListingAction(cls.item_delete_func,
+                                                  name='delete',
+                                                  icon=cls.item_delete_icon,
+                                                  title=cls.item_delete_title,
+                                                  batch=True,
+                                                  )
 
             cls._actions = ImmutableDict(actions)
             filters.sort(key=lambda x: x.order)

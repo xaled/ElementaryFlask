@@ -21,6 +21,7 @@ class ListingColumn:
 
     def td(self, item):
         val = self.generator(item) if self.generator is not None else getattr(item, self.name, "None")
+        val = str(val)
         if not self.safe_html:
             val = html_escape(val)
         if self.formatter:

@@ -91,7 +91,7 @@ def render(*blocks: Iterable[Block], separator=None) -> RenderReturnValue:
     first = True
     no_separator = not separator
     for b in blocks:
-        if not b:
+        if b is None:
             continue
         if no_separator or first:
             res += _render(b)
