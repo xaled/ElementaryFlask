@@ -87,6 +87,7 @@ def mongo_collection_admin_listing(
         view_fields=None,
         edit_fields=None,
         filters_fields=None,
+        click_action='view',
 
 ):
     cls_fields = [k for k, v in document_cls._fields.items() if k != 'id']
@@ -137,6 +138,7 @@ def mongo_collection_admin_listing(
         show_header=show_header,
         items_per_page=items_per_page,
         default_sort=default_sort,
+        click_action=click_action,
     )
     for k, v in cls_dict.items():
         setattr(_CLS, k, v)

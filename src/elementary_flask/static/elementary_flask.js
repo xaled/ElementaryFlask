@@ -25,6 +25,9 @@ let ElementaryFlask = {
     submitListingAction: async function (button, frm_id = null) {
         // let frm = document.getElementById(frm_id);
         // let data = ElementaryFlask.serializeForm(frm);
+        if (document.getSelection().type == 'Range') {
+            return null;
+        }
         let frm = button.form;
 
         if (!frm) {
@@ -37,6 +40,9 @@ let ElementaryFlask = {
 
         let frmData = new FormData(frm);
         let button_info = JSON.parse(button.dataset.info);
+        if (button_info.action === null) {
+            return null;
+        }
         let ids = Array();
 
         if (button_info.item_id === 'batch') {

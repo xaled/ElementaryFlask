@@ -39,6 +39,7 @@ class AbstractListing(AbstractWeakComponent, ABC):
     show_header = True
     items_per_page = 20
     default_sort = None
+    click_action = 'view'
 
     def __init__(self):
         super(AbstractListing, self).__init__()

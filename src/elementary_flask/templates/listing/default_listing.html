@@ -134,7 +134,7 @@
                 {% for item in items %}
                     <tr
 
-                            data-info='{{ {'action': 'view', 'item_id': item[listing.id_field].__str__() } | tojson }}'
+                            data-info='{{ {'action': listing.click_action, 'item_id': item[listing.id_field].__str__() } | tojson }}'
                             onclick='ElementaryFlask.submitListingAction(this);return false;'
                     >
                         <td class="shrink-cell align-middle"
