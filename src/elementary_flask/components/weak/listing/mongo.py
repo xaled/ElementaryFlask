@@ -123,7 +123,7 @@ def mongo_collection_listing(
 
         def delete(self, ids):
             from elementary_flask.form import toast
-            docs = list(self._mongo_document_cls.objects(id__in=ids))
+            docs = list(self._mongo_document_cls.objects(**{self.id_field + '__in': ids}))
             for d in docs:
                 d.delete()
             if len(docs) > 1 or len(docs) == 0:
@@ -240,7 +240,7 @@ def generate_endpoint_functions(cls):
         return cls()
 
     def view_function(doc_id):
-        obj = cls._mongo_document_cls.objects(id=doc_id).first()
+        obj = cls._mongo_document_cls.objects(**{cls.id_field: doc_id}).first()
         if obj:
             return str(dict(obj.to_mongo()))
         return 404
@@ -255,7 +255,7 @@ def generate_endpoint_functions(cls):
             return cls.edit_form()
 
         def edit_function(doc_id):
-            obj = cls._mongo_document_cls.objects(id=doc_id).first()
+            obj = cls._mongo_document_cls.objects(**{cls.id_field: doc_id}).first()
             if obj:
                 return cls.edit_form(**dict(obj.to_mongo()))
             return 404
