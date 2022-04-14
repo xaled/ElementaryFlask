@@ -44,7 +44,8 @@ def jseval(js_code):
     return FormAction('eval', code=js_code)
 
 
-def toast(message, message_type='error', message_title='Error', sticky=True, timeout=10):
+def toast(message, message_type='error', message_title=None, sticky=True, timeout=10):
+    message_title = message_title if message_title is not None else message_type
     return FormAction('toast', message=message, message_type=message_type, message_title=message_title,
                       sticky=sticky, timeout=timeout)
 
