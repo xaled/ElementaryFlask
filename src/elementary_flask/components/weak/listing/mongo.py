@@ -221,6 +221,7 @@ def _msort(sort=None):
     ret = list()
     for k, o in sort:
         ret.append(f'{"-" if o == "desc" else "+"}{k}')
+    return ret
 
 
 def _mfilter(filters=None, query=None):
