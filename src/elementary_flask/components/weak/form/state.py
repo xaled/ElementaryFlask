@@ -5,7 +5,9 @@ from flask import url_for
 
 
 def form_json_state(form):
-    return json.dumps(form_state(form))
+    state = form_state(form)
+    state['data'] = {k: f._value() if hasattr(f, '_value') else f.data for k, f in form._fields.items()}
+    return json.dumps(state)
 
 
 def form_state(form):
