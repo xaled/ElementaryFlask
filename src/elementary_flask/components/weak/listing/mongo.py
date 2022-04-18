@@ -153,6 +153,15 @@ def mongo_collection_listing(
         edit_form=edit_form,
         endpoint_functions=None
     )
+
+    # additional actions & filters
+    if additional_actions:
+        for a in additional_actions:
+            cls_dict['additional_action_' + a.name] = a
+    if additional_filters:
+        for f in additional_filters:
+            cls_dict['additional_filter_' + f.name] = f
+
     for k, v in cls_dict.items():
         setattr(_CLS, k, v)
     # _CLS.__dict__.update()

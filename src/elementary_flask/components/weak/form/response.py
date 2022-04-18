@@ -1,5 +1,5 @@
 __all__ = ['FormAction', 'FormResponse', 'redirect', 'refresh', 'toast', 'jseval', 'replace_html', 'update_form',
-           'update_state', 'error']
+           'update_state', 'error', "success", "warning"]
 
 from dataclasses import dataclass
 from collections.abc import Iterable
@@ -44,7 +44,7 @@ def jseval(js_code):
     return FormAction('eval', code=js_code)
 
 
-def toast(message, message_type='error', message_title=None, sticky=True, timeout=10):
+def toast(message, message_type='info', message_title=None, sticky=False, timeout=10):
     message_title = message_title if message_title is not None else message_type
     return FormAction('toast', message=message, message_type=message_type, message_title=message_title,
                       sticky=sticky, timeout=timeout)
@@ -62,9 +62,21 @@ def update_form(form):
     return update_state(formState=form_state(form))
 
 
-def error(error_msg):
-    return toast(error_msg, message_type='error', message_title='Error')
+def error(error_msg, message_title="Error", sticky=False, timeout=10):
+    return toast(error_msg, message_type='error', message_title=message_title, sticky=sticky, timeout=timeout)
+
+
+def warning(wraning_msg, message_title="Warning", sticky=False, timeout=10):
+    return toast(wraning_msg, message_type='warning', message_title=message_title, sticky=sticky, timeout=timeout)
+
+
+def success(success_msg, message_title="Success", sticky=False, timeout=10):
+    return toast(success_msg, message_type='success', message_title=message_title, sticky=sticky, timeout=timeout)
 
 
 def refresh():
     return FormAction('refresh')
+
+
+def sleep(delay):
+    return FormAction('sleep', delay=delay)
