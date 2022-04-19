@@ -1,6 +1,6 @@
 __all__ = ['page_view_wrapper']
 
-from flask import Response
+from werkzeug.wrappers import Response
 
 from elementary_flask.globals import current_elementary_flask_app as _app
 import elementary_flask.typing as t
