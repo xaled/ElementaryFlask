@@ -93,6 +93,8 @@ def mongo_collection_listing(
         click_action='view',
         generate_edit_form=True,
         edit_form=None,
+        filter_parser=None,
+        sort_parser=None
 
 ):
     cls_fields = [k for k, v in document_cls._fields.items() if k != 'id']
@@ -100,26 +102,31 @@ def mongo_collection_listing(
     view_fields = view_fields or cls_fields
     edit_fields = edit_fields or cls_fields
 
+    filter_parser = filter_parser or _mfilter
+    sort_parser = sort_parser or _msort
+
     # edit form
     if edit_form is None and generate_edit_form:
         edit_form = _generate_edit_form(document_cls)
 
     class _CLS(AbstractListing):
         _mongo_document_cls = document_cls
+        _mongo_filter_parser = staticmethod(filter_parser)
+        _mongo_sort_parser = staticmethod(sort_parser)
 
         def list_items(self, page=1, items_per_page=20, filters=None, query=None, sort=None):
             item_count = self.count_items(filters=None, query=None)
             # if item_count == 0:
             #     return []
-            cursor = self._mongo_document_cls.objects(**_mfilter(filters=filters, query=query))
+            cursor = self._mongo_document_cls.objects(self._mongo_filter_parser(filters=filters, query=query))
             if sort:
-                cursor = cursor.order_by(*_msort(sort))
+                cursor = cursor.order_by(*self._mongo_sort_parser(sort))
             slice_start = (page - 1) * items_per_page
             slice_end = page * items_per_page
             return cursor[slice_start:slice_end]
 
         def count_items(self, filters=None, query=None):
-            return self._mongo_document_cls.objects(**_mfilter(filters=filters, query=query)).count()
+            return self._mongo_document_cls.objects(self._mongo_filter_parser(filters=filters, query=query)).count()
 
         def delete(self, ids):
             from elementary_flask.form import toast
@@ -234,8 +241,10 @@ def _msort(sort=None):
 
 
 def _mfilter(filters=None, query=None):
+    from mongoengine.queryset.visitor import Q
+
     # TODO query and filters
-    return dict()
+    return Q()
 
 
 def _generate_edit_form(document_cls):
