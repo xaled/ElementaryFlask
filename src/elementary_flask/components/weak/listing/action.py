@@ -1,10 +1,13 @@
-__all__ = ['ListingAction', 'listing_action']
+__all__ = ['ListingAction', 'listing_action', 'RedirectListingAction']
+
 from dataclasses import dataclass
 
 from markupsafe import Markup
+from flask import url_for
 
 from elementary_flask.typing import Callable, AbstractIcon, Union
 from ... import IClassIcon
+from elementary_flask.form import redirect
 
 
 @dataclass()
@@ -34,6 +37,38 @@ class ListingAction:
 
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
+
+
+class RedirectListingAction(ListingAction):
+    def __init__(
+            self,
+            name: str, /, *,
+            url: str = None,
+            endpoint: str = None,
+            endpoint_params: dict = None,
+            hidden: bool = False,
+            title: str = None,
+            icon: Union[AbstractIcon, str] = None
+    ):
+        url = url or ''
+        endpoint_params = endpoint_params or dict()
+
+        def func(self, id_):
+            if endpoint is not None:
+                return redirect(url_for(endpoint, **{k: v.format(id_) for k, v in endpoint_params.items()}))
+            return redirect(url.format(id_))
+
+        super(RedirectListingAction, self).__init__(func=func, name=name, hidden=hidden, title=title, icon=icon)
+        # self.url = url or ''
+        # self.endpoint = endpoint
+        # self.endpoint_params = endpoint_params or dict()
+
+    # def __call__(self, *args, **kwargs):
+    #     from elementary_flask.form import redirect
+    #     from flask import url_for
+    #     if self.endpoint is not None:
+    #         return redirect(url_for(self.endpoint, **self.endpoint_params))
+    #     return redirect(self.url)
 
 
 def listing_action(name=None, /, *, batch=False, form_cls=None, hidden=False, icon=None, title=None):
