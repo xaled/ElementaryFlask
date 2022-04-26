@@ -2,7 +2,7 @@ import os
 
 import setuptools
 
-VERSION = "0.0.1.dev7"
+VERSION = "0.0.1.dev8"
 install_requires = """install_requires"""
 
 if __name__ == '__main__':
