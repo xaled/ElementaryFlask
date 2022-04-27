@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 
 import flask as _f
@@ -142,6 +143,8 @@ class ElementaryFlask(ElementaryScaffold):
 
         # Registering Blueprints
         self.flask_config.from_file('app.config.yml', load=yaml.safe_load)
+        self.flask_config.setdefault('ELEMENTARY_FLASK_APP_NAME', self.name)
+        self.flask_config['DEBUG'] = os.environ.get('ELEMENTARY_DEBUG', 'False') == 'True'
         self.flask_app.register_blueprint(self.core_bp)
 
         # Error handler
@@ -164,7 +167,8 @@ class ElementaryFlask(ElementaryScaffold):
             self._set_debug_env()
 
         # Connect mongoengine
-        from elementary_flask.helpers import connect_mongoengine
+        from elementary_flask.helpers import set_helper_config, connect_mongoengine
+        set_helper_config(self.flask_config)
         with self.flask_app.app_context():
             connect_mongoengine()
 
