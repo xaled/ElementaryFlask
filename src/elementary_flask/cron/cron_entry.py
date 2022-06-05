@@ -21,3 +21,6 @@ class CronEntry:
 
     def get_next(self, start_time=None):
         return self.croniter.get_next(start_time=start_time)
+
+    def get_next_ex1(self, start_time):
+        return int(self.get_next(int(start_time) - 1))
