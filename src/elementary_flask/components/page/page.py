@@ -53,12 +53,12 @@ class AbstractPage(AbstractComponent, ABC):
 
         # Meta tags
         for meta in META_TAGS_KEYS:
-            if page_response and getattr(page_response.meta_tags, meta, None) is not None:
+            if page_response and page_response.meta_tags.get(meta, None) is not None:
                 meta_value = page_response.meta_tags[meta]
-            elif self.meta_tags is not None and getattr(self.meta_tags, meta, None) is not None:
+            elif self.meta_tags is not None and self.meta_tags.get(meta, None) is not None:
                 meta_value = self.meta_tags[meta]
             else:
-                meta_value = getattr(_app.config.default_meta_tags, meta, None)
+                meta_value = _app.config.default_meta_tags.get(meta, None)
             if meta_value:
                 head += f'<meta name="{meta}" content="{escape(meta_value)}">'
 
