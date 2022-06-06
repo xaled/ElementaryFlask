@@ -1,7 +1,6 @@
 __all__ = ['Renderable', 'AbstractComponent', 'render', 'RenderException']
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
 
 # from .markup_plus import MarkupPlus, RenderException # , RenderError,
 from markupsafe import Markup
@@ -61,6 +60,27 @@ class AbstractComponent(Renderable):
     def __call__(self, /, format_spec=None, **options) -> RenderReturnValue:
         return self.render(format_spec=format_spec, **options)
 
+    def __add__(self, other):
+        return ConcatenatedComponent(self, other)
+
+    def __radd__(self, other):
+        return ConcatenatedComponent(other, self)
+
+
+class ConcatenatedComponent(AbstractComponent):
+    def __init__(self, *items: Block, separator='\n'):
+        self.items = items
+        self.separator = separator
+
+    def render(self, /, **options) -> RenderReturnValue:
+        return render(*self.items, separator=self.separator, **options)
+
+    def __add__(self, other):
+        return ConcatenatedComponent(*self.items, other)
+
+    def __radd__(self, other):
+        return ConcatenatedComponent(other, *self.items)
+
 
 def _render(block: Block, **options) -> RenderReturnValue:
     # if isinstance(block, str) or isinstance(block, MarkupPlus) or isinstance(block, Markup):
@@ -86,7 +106,7 @@ def _render(block: Block, **options) -> RenderReturnValue:
     raise RenderException('Unsupported block type')
 
 
-def render(*blocks: Iterable[Block], separator=None, **options) -> RenderReturnValue:
+def render(*blocks: Block, separator=None, **options) -> RenderReturnValue:
     res = Markup()
     first = True
     no_separator = not separator
