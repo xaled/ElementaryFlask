@@ -86,7 +86,7 @@ class ElementaryScaffold:
                     _nt = _nt[0].upper() + _nt[1:]
                 _ni = get_icon(navigation_icon)
                 self.elementary_ns.navigation_map.append(
-                    NavigationLink(title=_nt, endpoint=_ep, params=navigation_params,
+                    NavigationLink(title=_nt, endpoint=self.endpoint_prefix() + _ep, params=navigation_params,
                                    icon=_ni))
 
             options['methods'] = ['GET']
