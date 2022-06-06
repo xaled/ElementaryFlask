@@ -86,7 +86,7 @@ def _render(block: Block, **options) -> RenderReturnValue:
     raise RenderException('Unsupported block type')
 
 
-def render(*blocks: Iterable[Block], separator=None) -> RenderReturnValue:
+def render(*blocks: Iterable[Block], separator=None, **options) -> RenderReturnValue:
     res = Markup()
     first = True
     no_separator = not separator
@@ -94,9 +94,9 @@ def render(*blocks: Iterable[Block], separator=None) -> RenderReturnValue:
         if b is None:
             continue
         if no_separator or first:
-            res += _render(b)
+            res += _render(b, **options)
         else:
-            res += separator + _render(b)
+            res += separator + _render(b, **options)
         first = False
     return res
 

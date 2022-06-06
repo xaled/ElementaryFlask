@@ -6,7 +6,7 @@ from flask.scaffold import setupmethod
 from flask import Blueprint
 
 import elementary_flask.typing as t
-from elementary_flask.components import IClassIcon, NavigationLink, wrap_form_cls, form_endpoint_wrapper, \
+from elementary_flask.components import get_icon, NavigationLink, wrap_form_cls, form_endpoint_wrapper, \
     page_view_wrapper
 from elementary_flask.cron import CronEntry
 
@@ -84,9 +84,7 @@ class ElementaryScaffold:
                 if not _nt:
                     _nt = _ep.replace('_', ' ').strip()
                     _nt = _nt[0].upper() + _nt[1:]
-                _ni = navigation_icon
-                if _ni and isinstance(_ni, str):
-                    _ni = IClassIcon(_ni)
+                _ni = get_icon(navigation_icon)
                 self.elementary_ns.navigation_map.append(
                     NavigationLink(title=_nt, endpoint=_ep, params=navigation_params,
                                    icon=_ni))

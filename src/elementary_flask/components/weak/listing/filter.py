@@ -9,7 +9,7 @@ from markupsafe import Markup
 from elementary_flask.globals import current_elementary_flask_app as _app
 from elementary_flask.typing import Union, Callable, Tuple, AbstractIcon
 from ._page_uri import page_uri
-from ... import IClassIcon
+from ... import get_icon
 
 FILTERS_GLOBAL_KEY = 'elementary_flask_listing_parsed_filters'
 
@@ -73,7 +73,7 @@ class ListingFilter:
         # self.title = escape(self.title)
 
         if isinstance(self.icon, str):
-            self.icon = IClassIcon(self.icon)
+            self.icon = get_icon(self.icon)
 
         if self.icon:
             self.title = Markup(self.icon.render()) + ' ' + self.title

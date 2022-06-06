@@ -6,7 +6,7 @@ from markupsafe import Markup
 from flask import url_for
 
 from elementary_flask.typing import Callable, AbstractIcon, Union
-from ... import IClassIcon
+from ... import get_icon
 from elementary_flask.form import redirect
 
 
@@ -24,7 +24,7 @@ class ListingAction:
 
     def __post_init__(self):
         if self.icon and isinstance(self.icon, str):
-            self.icon = IClassIcon(self.icon)
+            self.icon = get_icon(self.icon)
 
     def button_inner_html(self):
         if self.title and self.icon:
