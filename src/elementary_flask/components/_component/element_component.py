@@ -1,6 +1,6 @@
 __all__ = ['AbstractHTMLElementComponent']
 
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from wtforms.widgets.core import html_params
 from markupsafe import Markup
@@ -30,16 +30,20 @@ class AbstractHTMLElementComponent(AbstractComponent, ABC):
         return Markup("<%s %s>" % (self.html_tag, self.html_params(**_attributes)))
 
     def render_end_tag(self):
-        if not self.void_element:
-            return Markup('</%s>' % self.html_tag)
-        return ''
+        return Markup('</%s>' % self.html_tag)
 
     def render(self, /, extra_classes=None, tag_attributes=None, **options) -> RenderReturnValue:
-        return self.render_start_tag() + self.render_inner_html() + self.render_end_tag()
+        tag_attributes = tag_attributes or dict()
+        if self.void_element:
+            return self.render_start_tag(extra_classes=extra_classes, **tag_attributes)
 
-    @abstractmethod
+        return (
+                self.render_start_tag(extra_classes=extra_classes, **tag_attributes)
+                + self.render_inner_html() + self.render_end_tag()
+        )
+
     def render_inner_html(self, **options) -> RenderReturnValue:
-        raise NotImplementedError()
+        return ""
 
 
 def _append_classes(*classes_strings):
