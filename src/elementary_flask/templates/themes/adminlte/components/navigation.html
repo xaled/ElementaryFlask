@@ -26,14 +26,36 @@
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                 data-accordion="false">
                 {% for itm in navigation.navigation_provider.generate_navigation() %}
-                    <li class="nav-item">
-                        <a href="{{ itm.get_link() }}" class="nav-link">
-                            {% if itm.icon and itm.icon.icon_class %}
-                                <i class="nav-icon {{ itm.icon.icon_class }}"></i>
-                            {% endif %}
-                            <p>{{ itm.title }}</p>
-                        </a>
-                    </li>
+                    {% if isinstance(itm,  'NavigationLink') %}
+                        <li class="nav-item">
+                            <a href="{{ itm.get_link() }}" class="nav-link">
+                                {{ itm.icon |render(extra_classes='nav-icon') }}
+                                <p>{{ itm.title }}</p>
+                            </a>
+                        </li>
+                    {% elif isinstance(itm,  'NavigationGroup') %}
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                {{ itm.icon |render(extra_classes='nav-icon') }}
+                                <p>
+                                    {{ itm.title }}
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                {% for sub_itm in itm.items_list %}
+                                    {% if isinstance(sub_itm,  'NavigationLink') %}
+                                        <li class="nav-item">
+                                            <a href="{{ sub_itm.get_link() }}" class="nav-link">
+                                                {{ sub_itm.icon |render(extra_classes='nav-icon') }}
+                                                <p>{{ sub_itm.title }}</p>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endif %}
                 {% endfor %}
 
             </ul>
