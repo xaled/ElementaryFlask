@@ -8,7 +8,7 @@ from werkzeug.exceptions import HTTPException
 import elementary_flask.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
 from .components import FavIcon, Theme, LayoutMapping, \
-    EmptyPageLayout, render, default_form_render, AbstractNavigationProvider, StaticNavigationProvider, Navigation, \
+    EmptyPageLayout, default_form_render, AbstractNavigationProvider, StaticNavigationProvider, Navigation, \
     PageErrorResponse
 from .cron import cron_endpoint, CronEntry
 from .includes import DEFAULT_BOOTSTRAP_VERSION, DEFAULT_ALPINEJS_DEPENDENCY, ComponentIncludes
@@ -133,12 +133,14 @@ class ElementaryFlask(ElementaryScaffold):
             self.init_app(self.flask_app)
 
     def init_app(self, flask_app, /, ):
+        from elementary_flask.utils.jinja2 import JINJA2_FILTERS_UPDATES, JINJA2_GLOBALS_UPDATES
         if self._init:
             return
         self.flask_app = flask_app
         self.flask_app.elementary_flask = self
         self.flask_app.update_template_context(dict(elementary_flask_config=self.config))
-        self.flask_app.jinja_env.filters.update(render=render)
+        self.flask_app.jinja_env.globals.update(**JINJA2_GLOBALS_UPDATES)
+        self.flask_app.jinja_env.filters.update(**JINJA2_FILTERS_UPDATES)
         self.flask_config = self.flask_app.config
 
         # Registering Blueprints

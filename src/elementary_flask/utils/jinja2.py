@@ -1,3 +1,5 @@
+__all__ = ['Jinja2Env', 'JINJA2_GLOBALS_UPDATES', 'JINJA2_FILTERS_UPDATES']
+
 from flask.globals import session, request, g
 from flask.helpers import get_flashed_messages, url_for
 from jinja2 import Environment, FileSystemLoader
@@ -6,6 +8,14 @@ from markupsafe import Markup
 
 from elementary_flask.components import render
 from elementary_flask.globals import current_elementary_flask_app as _app
+from .j2_isinstance import j2_isinstance
+
+JINJA2_GLOBALS_UPDATES = {
+    'isinstance': j2_isinstance
+}
+JINJA2_FILTERS_UPDATES = {
+    'render': render
+}
 
 
 class Jinja2Env:
@@ -21,9 +31,8 @@ class Jinja2Env:
             session=session,
             g=g,
         )
-        self.jinja2_env.filters.update(
-            render=render
-        )
+        self.jinja2_env.globals.update(**JINJA2_GLOBALS_UPDATES)
+        self.jinja2_env.filters.update(**JINJA2_FILTERS_UPDATES)
         self.parent = parent
         self.elementary_flask_app = elementary_flask_app
         if self.elementary_flask_app:
