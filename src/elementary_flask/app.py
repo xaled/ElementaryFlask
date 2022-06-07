@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import flask as _f
 import yaml
 from werkzeug.exceptions import HTTPException
+from flask_caching import Cache
 
 import elementary_flask.typing as t
 from ._consts import STATIC_FOLDER, TEMPLATE_FOLDER
@@ -28,6 +29,8 @@ class ElementaryFlask(ElementaryScaffold):
                  logo_src=None,
                  renderers=None,
                  crontab: t.Iterable[CronEntry] = None,
+                 cache_config=None,
+                 cache_with_jinja2_ext=None,
                  **options):
 
         ElementaryScaffold.__init__(self)
@@ -128,6 +131,11 @@ class ElementaryFlask(ElementaryScaffold):
         self.redis = None
         self._teardown_functions = list()
 
+        # Cache
+        self.cache = None
+        self.config.cache_config = cache_config or dict()
+        self.config.cache_with_jinja2_ext = cache_with_jinja2_ext
+
         # init app
         if self.flask_app:
             self.init_app(self.flask_app)
@@ -169,10 +177,25 @@ class ElementaryFlask(ElementaryScaffold):
             self._set_debug_env()
 
         # Connect mongoengine
-        from elementary_flask.helpers import set_helper_config, connect_mongoengine
+        from elementary_flask.helpers import set_helper_config, connect_mongoengine, get_redis_config
         set_helper_config(self.flask_config)
         with self.flask_app.app_context():
             connect_mongoengine()
+            _rc = get_redis_config()
+            # print(_rc)
+
+        # Cache
+        self.config.cache_config.setdefault('CACHE_TYPE', 'RedisCache')
+        if _rc.get('url', None):
+            self.config.cache_config.setdefault('CACHE_REDIS_URL', _rc.get('url'))
+        else:
+            self.config.cache_config.setdefault('CACHE_REDIS_HOST', _rc.get('host'))
+            self.config.cache_config.setdefault('CACHE_REDIS_PORT', _rc.get('port'))
+            self.config.cache_config.setdefault('CACHE_REDIS_DB', _rc.get('db'))
+        if _rc.get('password', None):
+            self.config.cache_config.setdefault('CACHE_REDIS_PASSWORD', _rc.get('password'))
+        self.cache = Cache(with_jinja2_ext=self.config.cache_with_jinja2_ext, config=self.config.cache_config)
+        self.cache.init_app(flask_app)
 
         self._init = True
 
@@ -184,6 +207,7 @@ class ElementaryFlask(ElementaryScaffold):
     def run(self, host=None, port=None, debug=None, load_dotenv=True, **kwargs):
         # self.init_app(self.flask_app, debug=debug)
         if debug:
+            os.environ['ELEMENTARY_DEBUG'] = 'True'
             self._set_debug_env()
 
         # Run flask app
