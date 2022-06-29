@@ -31,6 +31,7 @@ class ElementaryScaffoldNamespace:
 class ElementaryScaffold:
     def __init__(self):
         self.elementary_ns = ElementaryScaffoldNamespace()
+        self.endpoint_prefix = None
 
     @setupmethod
     def route_page(self, rule: str, endpoint: t.OptionalStr = None,
@@ -86,7 +87,7 @@ class ElementaryScaffold:
                     _nt = _nt[0].upper() + _nt[1:]
                 _ni = get_icon(navigation_icon)
                 self.elementary_ns.navigation_map.append(
-                    NavigationLink(title=_nt, endpoint=self.endpoint_prefix() + _ep, params=navigation_params,
+                    NavigationLink(title=_nt, endpoint=lambda: self.endpoint_prefix + _ep, params=navigation_params,
                                    icon=_ni))
 
             options['methods'] = ['GET']
@@ -119,7 +120,7 @@ class ElementaryScaffold:
             if not _form_name_validator.match(rule):
                 raise ValueError('Forbidden value for rule: ' + rule)
 
-            setattr(cls, 'elementary_flask_action_endpoint', self.endpoint_prefix() + n)
+            setattr(cls, 'elementary_flask_action_endpoint', lambda cls_self: self.endpoint_prefix + n)
 
             # register form endpoint
             options['methods'] = ['POST']
@@ -190,10 +191,11 @@ class ElementaryScaffold:
 
         return decorator
 
-    def endpoint_prefix(self):
-        if isinstance(self, Blueprint):
-            return self.name + '.'
-        return ''
+    # def endpoint_prefix(self):
+    #     raise NotImplementedError()
+    #     # if isinstance(self, Blueprint):
+    #     #     return self.name + '.'
+    #     # return ''
 
 
 def _validate_rule(rule):

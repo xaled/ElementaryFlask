@@ -39,6 +39,8 @@ def get_mongo_config(config=None):
             elementary_config['mongodb'] = dict()
             mongo_config = elementary_config['mongodb']
 
+        mongo_config.setdefault('db', app_config.get('ELEMENTARY_FLASK_APP_NAME', 'test_app').lower())
+
         if 'url' not in mongo_config:
             host = mongo_config.setdefault('host', 'localhost' if debug else 'mongo')
             port = mongo_config.setdefault('port', 27017)
@@ -63,6 +65,7 @@ def _get_mongo_client():
 
 def connect_mongoengine(db=None, alias=None, **kwargs):
     mongo_config = get_mongo_config()
+    db = db or mongo_config['db']
     if mongo_config and mongo_config.get('connect_mongoengine', False):
         import mongoengine  # noqa
         if alias is None:

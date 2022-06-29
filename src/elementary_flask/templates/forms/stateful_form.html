@@ -2,7 +2,7 @@
       x-data='ElementaryFlask.statefulForm({{ form_state| safe }})'
       @submit.prevent="submitForm"
       method="POST"
-      action="{{ url_for(form.elementary_flask_action_endpoint) }}"
+      action="{{ url_for(form.elementary_flask_action_endpoint()) }}"
       id="{{ form.elementary_flask_form_id }}">
     {# TODO: Bootstrap5. This code is only valid for Bootstrap 4#}
     {{ form.hidden_tag() }}

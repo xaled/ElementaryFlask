@@ -25,11 +25,13 @@ class NormalContainer(AbstractHTMLElementComponent, ContainerMixin):
 
     def __init__(self, children: ContainerChildren, /, *, extra_classes=None, tag_attributes=None,
                  separator=None):
-        tag_attributes = tag_attributes or dict()
-        super(NormalContainer, self).__init__(extra_classes=extra_classes, **tag_attributes)
+        super(NormalContainer, self).__init__(extra_classes=extra_classes, attributes=tag_attributes)
         self.children = _init_children(children)
         if separator:
             self.separator = separator
 
-    def render_inner_html(self, **options) -> RenderReturnValue:
-        return render(*self.children)
+    def __iter__(self):
+        yield from self.children
+
+    def render_inner_html(self, separator='\n', **options) -> RenderReturnValue:
+        return render(*self, separator=separator)

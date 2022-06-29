@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from html import escape as html_escape
 
 from elementary_flask.globals import current_elementary_flask_app as _app
-from elementary_flask.typing import Optional, AbstractIcon, List
+from elementary_flask.typing import Optional, AbstractIcon, List, Callable, Union
 
 
 @dataclass
@@ -12,7 +12,7 @@ class NavigationItem:
     title: str
     icon: Optional[AbstractIcon] = None
     link: Optional[str] = None
-    endpoint: Optional[str] = None
+    endpoint: Optional[Union[Callable, str]] = None
     params: Optional[dict] = None
     disabled: bool = False
     navigation_type: str = 'link'
@@ -23,7 +23,7 @@ class NavigationLink(NavigationItem):
                  title: str,
                  icon: Optional[AbstractIcon] = None,
                  link: Optional[str] = None,
-                 endpoint: Optional[str] = None,
+                 endpoint: Optional[Union[Callable, str]] = None,
                  params: Optional[dict] = None,
                  disabled: bool = False,
                  ):
@@ -33,9 +33,12 @@ class NavigationLink(NavigationItem):
                                              params=params, disabled=disabled)
 
     def get_link(self):
-        if self.params:
-            return self.link or _app.url_for(self.endpoint, **self.params)
-        return self.link or _app.url_for(self.endpoint)
+        if self.link is None and self.endpoint is not None:
+            params = self.params or dict()
+            endpoint = self.endpoint() if callable(self.endpoint) else self.endpoint
+            self.link = _app.url_for(endpoint, **params)
+
+        return self.link
 
     def get_html_title(self):
         _title = html_escape(self.title)

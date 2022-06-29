@@ -12,4 +12,4 @@ def wrap_form_cls(form_cls, /, *, form_id, rendering_type, scaffold):
     setattr(form_cls, 'rendered_type', 'Form')
     setattr(form_cls, 'elementary_flask_rendering_type', rendering_type)
     setattr(form_cls, 'elementary_flask_form_id', form_id)
-    setattr(form_cls, 'elementary_flask_action_endpoint', scaffold.endpoint_prefix() + form_id)
+    setattr(form_cls, 'elementary_flask_action_endpoint', lambda self: scaffold.endpoint_prefix + form_id)

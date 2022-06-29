@@ -18,7 +18,7 @@ def form_state(form):
     return dict(
         id=form.elementary_flask_form_id,
         method='POST',
-        uri=url_for(form.elementary_flask_action_endpoint),
+        uri=url_for(form.elementary_flask_action_endpoint()),
         data=form.data,
         errors=errors,
 

@@ -36,6 +36,7 @@ class ElementaryFlask(ElementaryScaffold):
         ElementaryScaffold.__init__(self)
         self._init = False
         self.name = name
+        self.endpoint_prefix = ""
 
         self.flask_app = flask_app
         if not self.flask_app and create_flask_app:

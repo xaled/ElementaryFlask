@@ -76,7 +76,7 @@ def get_redis_config(config=None):
             redis_config.setdefault('db', 0)
         redis_config.setdefault(
             'key_prefix',
-            app_config.setdefault('ELEMENTARY_FLASK_APP_NAME', 'test_app').upper() + '_'
+            app_config.get('ELEMENTARY_FLASK_APP_NAME', 'test_app').upper() + '_'
         )
 
     return redis_config

@@ -117,7 +117,7 @@
         </div>
     </div>
     <form method="post" id="{{ listing.listing_id() }}"
-          action="{{ url_for(listing.elementary_flask_action_endpoint) }}"
+          action="{{ url_for(listing.elementary_flask_action_endpoint()) }}"
           onsubmit="return false;">
         <div class="table-responsive mt-5">
             <table class="table table-hover">
