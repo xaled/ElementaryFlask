@@ -1,11 +1,11 @@
-__all__ = ['AbstractHTMLElementComponent', 'append_classes']
+__all__ = ['AbstractHTMLElementComponent', 'append_classes', 'HTMLElementComponent']
 
 from abc import ABC
 
 from wtforms.widgets.core import html_params  # noqa
 from markupsafe import Markup
 
-from .component import AbstractComponent
+from .component import AbstractComponent, render
 from elementary_flask.typing import RenderReturnValue
 
 
@@ -60,3 +60,17 @@ def append_classes(*classes_strings):
     if ret:
         return ' '.join(ret)
     return None
+
+
+class HTMLElementComponent(AbstractHTMLElementComponent):
+    def __init__(self, html_tag, inner_component=None, void_element=False, classes=None, attributes=None):
+        self.html_tag = html_tag
+        self.void_element = void_element
+        self.classes = classes
+        self.inner_component = inner_component
+        super(HTMLElementComponent, self).__init__(attributes=attributes)
+
+    def render_inner_html(self, **options) -> RenderReturnValue:
+        if self.inner_component:
+            return render(self.inner_component)
+        return ''
