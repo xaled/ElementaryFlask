@@ -1,7 +1,7 @@
 __all__ = ['Renderable', 'AbstractComponent', 'render', 'RenderException']
 
 from abc import ABC, abstractmethod
-
+from collections.abc import Mapping, Iterable
 # from .markup_plus import MarkupPlus, RenderException # , RenderError,
 from markupsafe import Markup
 
@@ -128,6 +128,8 @@ class ConcatenatedComponent(AbstractComponent):
 
 def _render(block: Block, **options) -> RenderReturnValue:
     # if isinstance(block, str) or isinstance(block, MarkupPlus) or isinstance(block, Markup):
+    if block is None:
+        return ''
     if isinstance(block, str) or isinstance(block, Markup):
         return block
     try:
@@ -141,6 +143,11 @@ def _render(block: Block, **options) -> RenderReturnValue:
             return block.__html_format__(options.get('format_spec', None))
         if hasattr(block, '__html__'):
             return block.__html__()
+        if isinstance(block, int) or isinstance(block, float) or isinstance(block, bool):
+            return repr(block)
+        if isinstance(block, Iterable) and not isinstance(block, Mapping):
+            return render(*block, **options)
+
     except RenderException:
         raise
     except Exception as e:
