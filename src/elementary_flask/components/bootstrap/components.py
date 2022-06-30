@@ -1,6 +1,7 @@
 from elementary_flask.components import NormalContainer
 from elementary_flask.typing import ContainerChildren
 from markupsafe import Markup
+__all__ = ['BootstrapAlert', 'BootstrapBadge', 'BOOTSTRAP_COLOR_CLASSES']
 
 BOOTSTRAP_COLOR_CLASSES = ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark')
 
