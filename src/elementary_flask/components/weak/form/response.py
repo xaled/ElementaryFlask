@@ -1,5 +1,5 @@
 __all__ = ['FormAction', 'FormResponse', 'redirect', 'refresh', 'toast', 'jseval', 'replace_html', 'update_form',
-           'update_state', 'error', "success", "warning"]
+           'update_state', 'error', "success", "warning", "hide"]
 
 from dataclasses import dataclass
 from collections.abc import Iterable
@@ -66,8 +66,8 @@ def error(error_msg, message_title="Error", sticky=False, timeout=10):
     return toast(error_msg, message_type='error', message_title=message_title, sticky=sticky, timeout=timeout)
 
 
-def warning(wraning_msg, message_title="Warning", sticky=False, timeout=10):
-    return toast(wraning_msg, message_type='warning', message_title=message_title, sticky=sticky, timeout=timeout)
+def warning(warning_msg, message_title="Warning", sticky=False, timeout=10):
+    return toast(warning_msg, message_type='warning', message_title=message_title, sticky=sticky, timeout=timeout)
 
 
 def success(success_msg, message_title="Success", sticky=False, timeout=10):
@@ -80,3 +80,9 @@ def refresh():
 
 def sleep(delay):
     return FormAction('sleep', delay=delay)
+
+
+def hide(selector, select_from_document=False, closest=True):
+    return FormAction('hide',
+                      selector=selector, select_from_document=select_from_document, closest=closest
+                      )

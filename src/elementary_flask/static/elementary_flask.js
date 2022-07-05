@@ -1,7 +1,8 @@
 let ElementaryFlask = {
-    privateSubmitForm: function (frm, action, body) {
+    privateSubmitForm: function (frm, action, body, headers = null) {
         fetch(action, {
             method: 'POST',
+            headers: headers,
             body: body,
         })
             .then(response => response.json())
@@ -16,6 +17,56 @@ let ElementaryFlask = {
     },
     submitForm: async function (frm) {
         ElementaryFlask.privateSubmitForm(frm, frm.action, new FormData(frm))
+    },
+    submitFormEx1: async function (frm,
+                                   {
+                                       action = undefined,
+                                       data = undefined,
+                                       body = undefined,
+                                       headers = undefined,
+                                       submit = undefined,
+                                   }) {
+        const has_submit = submit !== undefined && submit !== null;
+
+        if((frm === null || frm === undefined) && has_submit){
+            frm = submit.closest('form');
+        }
+        if (typeof action === 'undefined')
+            action = frm.getAttribute('action');
+
+
+        if (typeof body === 'undefined') {
+            if (typeof data === 'undefined')
+                data = ElementaryFlask.formDataToObject(new FormData(frm));
+            if(has_submit)
+                data[submit.name] = submit.value;
+            body = JSON.stringify(data);
+        }
+
+        if (typeof headers === 'undefined')
+            headers = {"Content-Type": "application/json", "Accept": "application/json"};
+
+
+        ElementaryFlask.privateSubmitForm(frm, action, body, headers);
+        return false;
+    },
+    formDataToObject: function (frmData) {
+        // console.log(frmData);
+        let object = {};
+        frmData.forEach((value, key) => {
+            // Reflect.has in favor of: object.hasOwnProperty(key)
+            if (!Reflect.has(object, key)) {
+                object[key] = value;
+                return;
+            }
+            if (!Array.isArray(object[key])) {
+                object[key] = [object[key]];
+            }
+            object[key].push(value);
+        });
+        // console.log(object, Object.fromEntries(frmData.entries()));
+        return object;
+        // return JSON.stringify(object);
     },
 
     listingCheckboxClick: function (el) {
@@ -105,17 +156,25 @@ let ElementaryFlask = {
                     ElementaryFlask.refresh_page();
                     break;
                 case 'replace':
-                    if (frm == null) {
+                    if (frm === null) {
                         console.error("Stateless element is not set!");
                         throw "Stateless element is not set!";
                     }
                     ElementaryFlask.replaceElement(frm, formAction.params.html);
                     break;
+                case 'hide':
+                    if (frm === null) {
+                        console.error("Stateless element is not set!");
+                        throw "Stateless element is not set!";
+                    }
+                    ElementaryFlask.hideElement(frm, formAction.params.selector,
+                        formAction.params.select_from_document, formAction.params.closest);
+                    break;
                 case 'eval':
                     eval(formAction.params.code);
                     break;
                 case 'state':
-                    if (el == null) {
+                    if (el === null) {
                         console.error("Stateful element is not set!");
                         throw "Stateful element is not set!";
                     }
@@ -177,6 +236,23 @@ let ElementaryFlask = {
         // document.write(new_content);
         // document.close();
         el.outerHTML = new_content;
+
+    },
+    hideElement: function (frm, selector, select_from_document=false, closest=true) {
+        // document.open();
+        // document.write(new_content);
+        // document.close();
+        let el = frm;
+        if(select_from_document)
+            el = document.querySelectorAll(selector);
+        else if(closest)
+            el = [frm.closest(selector)];
+        else
+            el = frm.querySelectorAll(selector);
+        console.log(frm, el);
+        el.forEach(function (e) {
+            e.style.display = "none";
+        });
 
     },
 
