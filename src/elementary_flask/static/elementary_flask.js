@@ -38,8 +38,11 @@ let ElementaryFlask = {
         if (typeof body === 'undefined') {
             if (typeof data === 'undefined')
                 data = ElementaryFlask.formDataToObject(new FormData(frm));
-            if (has_submit)
-                data[submit.name] = submit.value;
+            if (has_submit) {
+                // if(submit.value === undefined)
+                // data[submit.name] = submit.value;
+                data[submit.getAttribute('name')] = submit.getAttribute('value');
+            }
             body = JSON.stringify(data);
         }
 

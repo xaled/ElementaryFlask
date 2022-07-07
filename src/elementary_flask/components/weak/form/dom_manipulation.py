@@ -4,7 +4,7 @@ from elementary_flask.typing import Union, Iterable
 
 __all__ = ['SelectorTypeEnum', 'DOMManipulationTarget', 'DOMManipulationActionType', 'DOMManipulationActionType',
            'DOMManipulation', 'manipulate_dom_element', 'MANIPULATIONS', 'DOMManipulationFormAction',
-           'hide', 'enable', 'disable', 'set_class',
+           'hide', 'enable', 'disable', 'set_class', 'insert'
            ]
 
 
@@ -110,5 +110,23 @@ def disable(selector, select_from_document=False, selector_type=SelectorTypeEnum
 def set_class(selector, element_class, select_from_document=False, selector_type=SelectorTypeEnum.BY_ID):
     return DOMManipulationFormAction(selector=selector,
                                      manipulations=MANIPULATIONS.SELF_UPDATE.copy({'className': element_class}),
+                                     select_from_document=select_from_document,
+                                     selector_type=selector_type)
+
+
+def insert(selector, html_code, position="afterend", parent=False, hide_element=False,
+           select_from_document=False, selector_type=SelectorTypeEnum.BY_ID):
+    manipulations = [
+        DOMManipulation(
+            DOMManipulationTarget.PARENT if parent else DOMManipulationTarget.SELF,
+            DOMManipulationActionType.INSERT,
+            position,
+            html_code,
+        )
+    ]
+    if hide_element:
+        manipulations.insert(0, MANIPULATIONS.HIDE)
+    return DOMManipulationFormAction(selector=selector,
+                                     manipulations=manipulations,
                                      select_from_document=select_from_document,
                                      selector_type=selector_type)
