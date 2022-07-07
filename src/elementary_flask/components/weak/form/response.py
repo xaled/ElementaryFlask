@@ -1,5 +1,5 @@
 __all__ = ['FormAction', 'FormResponse', 'redirect', 'refresh', 'toast', 'jseval', 'replace_html', 'update_form',
-           'update_state', 'error', "success", "warning", "hide"]
+           'update_state', 'error', "success", "warning"]
 
 from dataclasses import dataclass
 from collections.abc import Iterable
@@ -82,7 +82,7 @@ def sleep(delay):
     return FormAction('sleep', delay=delay)
 
 
-def hide(selector, select_from_document=False, closest=True):
-    return FormAction('hide',
-                      selector=selector, select_from_document=select_from_document, closest=closest
-                      )
+# def hide(selector, select_from_document=False, closest=True):
+#     return FormAction('hide',
+#                       selector=selector, select_from_document=select_from_document, closest=closest
+#                       )

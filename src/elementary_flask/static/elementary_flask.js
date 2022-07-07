@@ -28,7 +28,7 @@ let ElementaryFlask = {
                                    }) {
         const has_submit = submit !== undefined && submit !== null;
 
-        if((frm === null || frm === undefined) && has_submit){
+        if ((frm === null || frm === undefined) && has_submit) {
             frm = submit.closest('form');
         }
         if (typeof action === 'undefined')
@@ -38,7 +38,7 @@ let ElementaryFlask = {
         if (typeof body === 'undefined') {
             if (typeof data === 'undefined')
                 data = ElementaryFlask.formDataToObject(new FormData(frm));
-            if(has_submit)
+            if (has_submit)
                 data[submit.name] = submit.value;
             body = JSON.stringify(data);
         }
@@ -170,6 +170,10 @@ let ElementaryFlask = {
                     ElementaryFlask.hideElement(frm, formAction.params.selector,
                         formAction.params.select_from_document, formAction.params.closest);
                     break;
+                case 'dom_element_manipulation':
+                    ElementaryFlask.elementManipuation(
+                        frm, formAction.params);
+                    break;
                 case 'eval':
                     eval(formAction.params.code);
                     break;
@@ -238,14 +242,105 @@ let ElementaryFlask = {
         el.outerHTML = new_content;
 
     },
-    hideElement: function (frm, selector, select_from_document=false, closest=true) {
+    elementManipuation: function (frm, params) {
+        let source_element = params.select_from_document ? document : frm;
+
+        let match_elements = frm;
+        switch (params.selector_type) {
+            case 'closest':
+                match_elements = [frm.closest(params.selector)];
+                break;
+            case 'by_class':
+                match_elements = source_element.getElementsByClassName(params.selector);
+                break;
+            case 'query_selector':
+                match_elements = source_element.querySelectorAll(params.selector);
+                break;
+            case 'by_id':
+            default:
+                match_elements = [document.getElementById(params.selector)];
+                break;
+
+        }
+
+        // console.log(frm, match_elements);
+        for (let ei in match_elements) {
+            let element = match_elements[ei];
+            for (let mi in params.manipulations) {
+                let manip = params.manipulations[mi];
+                // TODO: check target & action compatibility
+                let target = element;
+                switch (manip.target) {
+                    case 'class':
+                        target = element.classList;
+                        break;
+                    case 'attributes': // TODO: setAttribute
+                        target = element.attributes;
+                        break;
+                    case 'styles':
+                        target = element.style;
+                        break;
+                    case 'parent':
+                        target = element.parentElement;
+                        break;
+                    case 'document':
+                        target = document;
+                        break;
+                    // case 'self':
+                    // default:
+                    //     target = element;
+                    //     break;
+                }
+
+                switch (manip.action_type) {
+                    case 'extend':
+                        target.push(...manip.args)
+                        break;
+                    case 'update':
+                        ElementaryFlask.updateDict(target, manip.args[0])
+                        break;
+                    case 'remove':
+                        target.remove();
+                        break;
+                    case 'clear':
+                        ElementaryFlask.privateClearTarget(target, manip.target);
+                        while (target.length > 0) {
+                            target.pop();
+                        }
+                        // TODO: mapping (attributes)
+                        break;
+                    case 'affect':
+                        ElementaryFlask.privateClearTarget(target, manip.target);
+                        ElementaryFlask.privateUpdateTarget(target, manip.target, manip.args);
+                        break;
+                    case 'replace':
+                        target.outerHTML = manip.args[0];
+                        break;
+                    case 'insert':
+                        element.insertAdjacentHTML(manip.args[0], manip.args[1]);
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+
+
+        }
+        // match_elements.forEach(function (e) {
+        //     for(i)
+        //     e.style.display = "none";
+        // });
+
+    },
+    hideElement: function (frm, selector, select_from_document = false, closest = true) {
         // document.open();
         // document.write(new_content);
         // document.close();
         let el = frm;
-        if(select_from_document)
+        if (select_from_document)
             el = document.querySelectorAll(selector);
-        else if(closest)
+        else if (closest)
             el = [frm.closest(selector)];
         else
             el = frm.querySelectorAll(selector);

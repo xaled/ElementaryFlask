@@ -5,4 +5,4 @@ from .general import *
 from .weak import *
 from .page import *  # noqa
 
-__all__  = _component.__all__ + general.__all__  + weak.__all__ + page.__all__
+__all__ = _component.__all__ + general.__all__ + weak.__all__ + page.__all__
