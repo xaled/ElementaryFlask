@@ -256,10 +256,10 @@ class ElementaryFlask(ElementaryScaffold):
     def register_blueprint(self, blueprint, **options: t.Any) -> None:
         return self.flask_app.register_blueprint(blueprint, **options)
 
-    def _is_setup_finished(self) -> bool:
+    def _check_setup_finished(self, f_name: str) -> None:
         if self.flask_app is None:
             raise ValueError('setup method called before Flask App is init')
-        return self.flask_app._is_setup_finished()
+        return self.flask_app._check_setup_finished(f_name)
 
     def teardown(self, exception):
         for f in self._teardown_functions:

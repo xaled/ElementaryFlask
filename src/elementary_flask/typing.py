@@ -26,7 +26,7 @@ Renderable = "Renderable"
 #         raise NotImplementedError()
 
 
-StatusCode = _flask_typing.StatusCode
+StatusCode = int
 HeadersValue = _flask_typing.HeadersValue
 Block = Union[RenderReturnValue, "Renderable", Callable]
 BlocksDict = Dict[str, Block]
