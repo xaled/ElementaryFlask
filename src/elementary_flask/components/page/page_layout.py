@@ -43,8 +43,8 @@ class LayoutMapping:
         if layout in self.layouts:
             return self.layouts[layout]
 
-        if self.parent is None and self != _app.layout_mapping:
-            self.parent = _app.layout_mapping
+        if self.parent is None and self != _app.default_layout_mapping:
+            self.parent = _app.default_layout_mapping
 
         if self.parent and self.parent not in ignore:
             ignore.append(layout)

@@ -31,6 +31,7 @@ class ElementaryFlask(ElementaryScaffold):
                  crontab: t.Iterable[CronEntry] = None,
                  cache_config=None,
                  cache_with_jinja2_ext=None,
+                 app_page_layouts=None,
                  **options):
 
         ElementaryScaffold.__init__(self)
@@ -100,9 +101,14 @@ class ElementaryFlask(ElementaryScaffold):
         )
 
         # Default Layout Mapping
-        self.layout_mapping = LayoutMapping(
+        self.default_layout_mapping = LayoutMapping(
             default=EmptyPageLayout()
         )
+
+        # App page layouts
+        app_page_layouts = app_page_layouts or dict()
+        self.app_layout_mapping = LayoutMapping(self.theme.layouts_mapping, **app_page_layouts)
+        self.app_page_layouts = self.app_layout_mapping.layouts
 
         # Core jinja2 environment
         from elementary_flask.utils.jinja2 import Jinja2Env
@@ -215,7 +221,7 @@ class ElementaryFlask(ElementaryScaffold):
         self.flask_app.run(host=host, port=port, debug=debug, load_dotenv=load_dotenv, **kwargs)
 
     def get_layout(self, layout_name):
-        return self.theme.layouts_mapping.get_layout(layout_name)
+        return self.app_layout_mapping.get_layout(layout_name)
 
     def render_core_template(self, template_name, **kwargs):
         return self.core_jinja_env.render_template(template_name, **kwargs)

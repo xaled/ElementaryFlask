@@ -55,6 +55,7 @@ class ElementaryBluePrint(Blueprint, ElementaryScaffold):
                             icon=self.navigation_icon,
                             items_list=self.elementary_ns.navigation_map)
         )
+        elementary_app.app_page_layouts.update(self.elementary_ns.layouts)
 
     # def endpoint_prefix(self):
     #     return f"{self.name_prefix}.{self.name}."

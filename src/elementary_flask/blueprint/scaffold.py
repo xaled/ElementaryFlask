@@ -3,7 +3,6 @@ __all__ = ['ElementaryScaffold', 'setupmethod']
 import re
 
 from flask.scaffold import setupmethod
-from flask import Blueprint
 
 import elementary_flask.typing as t
 from elementary_flask.components import get_icon, NavigationLink, wrap_form_cls, form_endpoint_wrapper, \
@@ -22,6 +21,7 @@ class ElementaryScaffoldNamespace:
         self.navigation_map = list()
         self.page_view_functions = dict()
         self.crontab = list()
+        self.layouts = dict()
         # self.api_bp = _f.Blueprint('api', __name__, url_prefix='/api')
         # self.form_bp = _f.Blueprint('form', __name__, url_prefix='/form')
         # self.listing_bp = _f.Blueprint('listing', __name__, url_prefix='/listing')
@@ -190,6 +190,9 @@ class ElementaryScaffold:
             return f
 
         return decorator
+
+    def register_layout(self, layout_name, page_layout):
+        self.elementary_ns.layouts[layout_name] = page_layout
 
     # def endpoint_prefix(self):
     #     raise NotImplementedError()
