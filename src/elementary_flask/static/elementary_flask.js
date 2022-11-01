@@ -1,10 +1,13 @@
 let ElementaryFlask = {
     privateSubmitForm: function (frm, action, body, headers = null) {
-        fetch(action, {
+        let options = {
             method: 'POST',
-            headers: headers,
             body: body,
-        })
+        };
+        if (!(headers === null || headers === undefined))
+            options.headers = headers;
+
+        fetch(action, options)
             .then(response => response.json())
             .then(data => {
                 ElementaryFlask.formResponse(data, frm);
